@@ -1,0 +1,551 @@
+@import "tailwindcss";
+
+@theme {
+  /* Core 4-Color Brand System */
+  --color-primary: #006655;           /* Deep Teal-Green: Primary Background & Strong Headlines */
+  --color-primary-hover: #005244;
+  --color-primary-active: #004035;
+  --color-primary-light: #E0F2ED;
+
+  --color-secondary: #C4A760;         /* Bronze-Gold: CTAs, Secondary Accents & Icons */
+  --color-secondary-hover: #B0934C;
+  --color-secondary-active: #9E823C;
+  --color-secondary-light: #F6F0DC;
+
+  --color-tertiary: #007763;
+  --color-tertiary-light: #E4F5F0;
+
+  /* Specific Design System Roles */
+  --color-deep-teal: #006655;         /* Headlines & Primary Background */
+  --color-bronze-gold: #C4A760;       /* CTA Buttons, Icons & Accents */
+  --color-cream-ivory: #FBF8F1;       /* Card Backgrounds & Secondary Areas */
+  --color-dark-teal-text: #004C3D;    /* High-Legibility Body Text */
+
+  /* Surface & Background */
+  --color-bg: #F7F4EC;
+  --color-surface: #FBF8F1;           /* Cream-Ivory Cards */
+  --color-card-bg: #FBF8F1;
+  --color-surface-soft: #F4EEDF;
+  --color-surface-hover: #EFE8D6;
+
+  /* Typography */
+  --color-text-primary: #004C3D;      /* Dark Teal-Text for maximum legibility */
+  --color-text-secondary: #1F6154;
+  --color-text-muted: #4F7B72;
+  --color-text-placeholder: #82A39B;
+  --color-text-white: #FFFFFF;
+
+  /* Borders tailored for Cream-Ivory */
+  --color-border: #E5DEC9;
+  --color-border-light: #EFE9D9;
+  --color-border-focus: #006655;
+
+  /* Status */
+  --color-success: #006655;
+  --color-success-bg: #E0F2ED;
+
+  --color-warning: #C4A760;
+  --color-warning-bg: #FAF3DE;
+
+  --color-danger: #C62828;
+  --color-danger-bg: #FDE5E5;
+
+  --color-info: #1B768B;
+  --color-info-bg: #E0F3F7;
+
+  /* Icons & CTAs */
+  --color-icon-primary: #C4A760;      /* Bronze-Gold Icons */
+  --color-icon-muted: #56847A;
+  --color-cta: #C4A760;
+  --color-cta-hover: #B0934C;
+
+  /* Accent */
+  --color-accent: #C4A760;
+
+  /* Custom Warm Bronze-Gold Scale */
+  --color-gold-50: #FBF8F1;
+  --color-gold-100: #F6F0DC;
+  --color-gold-200: #EADFB9;
+  --color-gold-300: #DCCB95;
+  --color-gold-400: #CFAF6E;
+  --color-gold-500: #C4A760;
+  --color-gold-600: #B0934C;
+  --color-gold-700: #8E7438;
+  --color-gold-800: #6B5627;
+  --color-gold-900: #483918;
+
+  /* Deep Teal Scale */
+  --color-teal-50: #F0FAF7;
+  --color-teal-100: #E0F2ED;
+  --color-teal-200: #C1E6DC;
+  --color-teal-300: #93D3C3;
+  --color-teal-400: #5DB9A4;
+  --color-teal-500: #2F9C86;
+  --color-teal-600: #007763;
+  --color-teal-700: #006655;          /* Deep Teal-Green */
+  --color-teal-800: #006655;
+  --color-teal-900: #004C3D;          /* Dark Teal-Text */
+  --color-teal-950: #003329;
+}
+
+@layer base {
+  :root {
+    /* 1. Deep Teal-Green: Primary Background & Strong Headlines */
+    --deep-teal: #006655;
+    --primary: #006655;
+    --primary-hover: #005244;
+    --primary-active: #004035;
+    --primary-light: #E0F2ED;
+
+    /* 2. Bronze-Gold: CTA Buttons, Secondary Accents, & Icons */
+    --bronze-gold: #C4A760;
+    --secondary: #C4A760;
+    --secondary-hover: #B0934C;
+    --secondary-light: #F6F0DC;
+    --cta: #C4A760;
+    --cta-hover: #B0934C;
+
+    --tertiary: #007763;
+    --tertiary-light: #E4F5F0;
+
+    /* 3. Cream-Ivory: Card Backgrounds & Secondary Text Areas */
+    --cream-ivory: #FBF8F1;
+    --card-bg: #FBF8F1;
+    --surface: #FBF8F1;
+    --surface-soft: #F4EEDF;
+    --surface-hover: #EFE8D6;
+    --bg: #F7F4EC;
+
+    /* 4. Dark Teal-Text: High-Legibility Body Text & Details */
+    --dark-teal-text: #004C3D;
+    --text-primary: #004C3D;
+    --text-secondary: #1F6154;
+    --text-muted: #4F7B72;
+    --text-placeholder: #82A39B;
+    --text-white: #FFFFFF;
+
+    /* Borders for Cream-Ivory */
+    --border: #E5DEC9;
+    --border-light: #EFE9D9;
+    --border-focus: #006655;
+
+    /* Status */
+    --success: #006655;
+    --success-bg: #E0F2ED;
+
+    --warning: #C4A760;
+    --warning-bg: #FAF3DE;
+
+    --danger: #C62828;
+    --danger-bg: #FDE5E5;
+
+    --info: #1B768B;
+    --info-bg: #E0F3F7;
+
+    /* Icons */
+    --icon-primary: #C4A760;
+    --icon-muted: #56847A;
+
+    /* Aliases */
+    --color-primary: #006655;
+    --color-primary-hover: #005244;
+    --color-secondary: #C4A760;
+    --color-secondary-hover: #B0934C;
+    --color-background: #F7F4EC;
+    --color-dark: #004C3D;
+    --color-muted: #4F7B72;
+  }
+
+  html {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+    width: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden !important;
+    max-width: 100vw;
+    width: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
+    overflow-x: hidden !important;
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Pulse & ECG Keyframe Animations */
+@keyframes ecg-draw {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.15);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.12);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.6s ease-in-out infinite;
+}
+
+.animate-ripple {
+  animation: ripple 2.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.animate-float {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.ecg-line {
+  stroke-dasharray: 1000;
+  animation: ecg-draw 2.5s ease-out forwards;
+}
+
+/* ============================================================
+   PREMIUM BUTTONS & MOVING GRADIENT GLOWS
+   ============================================================ */
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 102, 85, 0.35);
+}
+
+.btn-premium:active {
+  transform: translateY(0);
+}
+
+/* Shimmer Light Sweep on Buttons */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  transition: all 0.75s ease;
+}
+
+.btn-shimmer:hover::before {
+  left: 150%;
+}
+
+/* Bronze-Gold CTA Button with moving soft gradient */
+.btn-gold {
+  background: linear-gradient(135deg, #C4A760 0%, #D4BA75 50%, #B0934C 100%);
+  background-size: 200% 200%;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-gold:hover {
+  background-position: 100% 100%;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -6px rgba(196, 167, 96, 0.45);
+}
+
+/* Primary Teal CTA Button */
+.btn-primary-glow {
+  background: linear-gradient(135deg, #006655 0%, #007763 50%, #004C3D 100%);
+  background-size: 200% 200%;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary-glow:hover {
+  background-position: 100% 100%;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -6px rgba(0, 102, 85, 0.4);
+}
+
+/* Danger / Soft Red Glow */
+.btn-danger-glow {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-danger-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -5px rgba(225, 29, 72, 0.35);
+}
+
+/* ============================================================
+   CARD HOVER LIFT & IMAGE ZOOM
+   ============================================================ */
+.card-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+  will-change: transform, box-shadow;
+}
+
+.card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -10px rgba(0, 76, 61, 0.10), 0 8px 16px -6px rgba(0, 76, 61, 0.05);
+}
+
+.img-zoom {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.group:hover .img-zoom {
+  transform: scale(1.04);
+}
+
+/* ============================================================
+   NAVBAR ANIMATED UNDERLINE LINK
+   ============================================================ */
+.nav-link-animated {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-link-animated::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 2px;
+}
+
+.nav-link-animated:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Active Nav Link */
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-primary);
+  transform: scaleX(1);
+  border-radius: 2px;
+}
+
+/* ============================================================
+   ICON MICRO-INTERACTIONS
+   ============================================================ */
+.icon-hover-bounce {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.group:hover .icon-hover-bounce,
+.icon-hover-bounce:hover {
+  transform: scale(1.15) translateY(-2px);
+}
+
+.icon-hover-arrow {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:hover .icon-hover-arrow {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   GLASSMORPHISM & FROSTED CARDS
+   ============================================================ */
+.glass-panel {
+  background: rgba(251, 248, 241, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 222, 201, 0.8);
+}
+
+.glass-card-dark {
+  background: rgba(0, 51, 41, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(196, 167, 96, 0.25);
+}
+
+/* ============================================================
+   PERFORMANCE & ACCESSIBILITY (prefers-reduced-motion)
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════
+ *  PRINT CSS — A5 MASTER TEMPLATE
+ *  Ensures printed output matches the web preview exactly.
+ *  Hides all non-letter content (nav, sidebar, footer, etc.)
+ * ═════════════════════════════════════════════════════════ */
+@media print {
+  @page {
+    size: 148mm 210mm;
+    margin: 0;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    width: 148mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide everything that is not the letter */
+  .no-print,
+  nav, header, footer,
+  aside, .sidebar,
+  [class*="Navbar"],
+  [class*="Footer"],
+  [class*="action-bar"] {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Force the master template to fill the page exactly */
+  [data-master-template="true"] {
+    width: 148mm !important;
+    min-width: 148mm !important;
+    max-width: 148mm !important;
+    height: 210mm !important;
+    min-height: 210mm !important;
+    max-height: 210mm !important;
+    margin: 0 !important;
+    padding: 5mm 6mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+
