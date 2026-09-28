@@ -217,6 +217,12 @@ export const Footer: React.FC = () => {
                   Patient Portal / My Account
                 </Link>
               </li>
+              <li>
+                <Link to="/admin/login" className="hover:text-[#C4A760] transition-colors flex items-center gap-1.5 opacity-90 hover:opacity-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C4A760]"></span>
+                  <span>Hospital Admin Portal</span>
+                </Link>
+              </li>
             </ul>
           </div>
 

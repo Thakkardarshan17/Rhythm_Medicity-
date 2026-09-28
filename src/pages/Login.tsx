@@ -270,6 +270,15 @@ export const Login: React.FC = () => {
                 </>
               )}
             </button>
+
+            <div className="pt-2 text-center">
+              <Link
+                to="/admin/login"
+                className="inline-flex items-center gap-1 text-xs text-[#006655] hover:text-[#C4A760] font-medium transition"
+              >
+                <span>Hospital Staff / Admin? Access Admin Console &rarr;</span>
+              </Link>
+            </div>
           </form>
         )}
 
