@@ -97,7 +97,7 @@ export const App: React.FC = () => {
           <ToastProvider>
             {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
 
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <ScrollToTop />
               <Routes>
                 {/* Admin Portal Authentication */}
