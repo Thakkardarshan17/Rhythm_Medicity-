@@ -90,9 +90,9 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F4EC] flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-[#F7F4EC] flex flex-col lg:flex-row w-full max-w-full">
       {/* Sidebar for Desktop */}
-      <aside className="hidden lg:flex w-64 h-screen sticky top-0 bg-[#003329] text-[#93D3C3] flex-col shrink-0 shadow-xl border-r border-[#004C3D] z-30">
+      <aside className="hidden lg:flex w-64 h-full bg-[#003329] text-[#93D3C3] flex-col shrink-0 shadow-xl border-r border-[#004C3D] z-30">
         {/* Brand & Live status */}
         <div className="p-4 border-b border-[#004C3D] space-y-3 shrink-0">
           <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ export const AdminLayout: React.FC = () => {
       )}
 
       {/* Main Content Pane */}
-      <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 min-w-0 w-full h-full p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <div className="w-full max-w-7xl mx-auto">
           <Outlet />
         </div>
