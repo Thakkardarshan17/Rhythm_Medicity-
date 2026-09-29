@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { DropdownProvider } from './contexts/DropdownContext';
 
 // Components
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { SplashScreen } from './components/SplashScreen';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -90,94 +91,97 @@ export const App: React.FC = () => {
     setShowSplash(false);
   };
 
+  const routerBasename = import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL;
+
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        <DropdownProvider>
-          <ToastProvider>
-            {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+    <ErrorBoundary>
+      <BrowserRouter basename={routerBasename}>
+        <AuthProvider>
+          <SettingsProvider>
+            <DropdownProvider>
+              <ToastProvider>
+                {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+                <ScrollToTop />
+                <Routes>
+                  {/* Admin Portal Authentication */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
 
-            <BrowserRouter basename={import.meta.env.BASE_URL}>
-              <ScrollToTop />
-              <Routes>
-                {/* Admin Portal Authentication */}
-                <Route path="/admin/login" element={<AdminLogin />} />
+                  {/* Admin Operational Console Routes */}
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="navigation" element={<AdminNavigation />} />
+                    <Route path="pages" element={<AdminPages />} />
+                    <Route path="pages/new" element={<AdminPageEditor />} />
+                    <Route path="pages/edit/:id" element={<AdminPageEditor />} />
+                    <Route path="doctors" element={<AdminDoctors />} />
+                    <Route path="specialities" element={<AdminSpecialities />} />
+                    <Route path="services" element={<AdminServices />} />
+                    <Route path="appointments" element={<AdminAppointments />} />
+                    <Route path="patients" element={<AdminPatients />} />
+                    <Route path="dropdowns" element={<AdminDropdownManagement />} />
+                    <Route path="statistics" element={<AdminHospitalStats />} />
+                    <Route path="appearance" element={<AdminWebsiteUI />} />
+                    <Route path="search" element={<AdminSearchSettings />} />
+                    <Route path="website/search" element={<AdminSearchSettings />} />
+                    <Route path="ai-assistant" element={<AdminDillo />} />
+                    <Route path="dillo" element={<AdminDillo />} />
+                    <Route path="banners" element={<AdminBanners />} />
+                    <Route path="payments" element={<AdminPayments />} />
+                    <Route path="audit-logs" element={<AdminAuditLogs />} />
+                    <Route path="settings" element={<AdminHospitalSettings />} />
+                    <Route path="appointment-letter" element={<AdminLetterSettings />} />
+                    <Route path="reports" element={<AdminReports />} />
+                    <Route path="profile" element={<AdminProfile />} />
+                  </Route>
 
-                {/* Admin Operational Console Routes */}
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="navigation" element={<AdminNavigation />} />
-                  <Route path="pages" element={<AdminPages />} />
-                  <Route path="pages/new" element={<AdminPageEditor />} />
-                  <Route path="pages/edit/:id" element={<AdminPageEditor />} />
-                  <Route path="doctors" element={<AdminDoctors />} />
-                  <Route path="specialities" element={<AdminSpecialities />} />
-                  <Route path="services" element={<AdminServices />} />
-                  <Route path="appointments" element={<AdminAppointments />} />
-                  <Route path="patients" element={<AdminPatients />} />
-                  <Route path="dropdowns" element={<AdminDropdownManagement />} />
-                  <Route path="statistics" element={<AdminHospitalStats />} />
-                  <Route path="appearance" element={<AdminWebsiteUI />} />
-                  <Route path="search" element={<AdminSearchSettings />} />
-                  <Route path="website/search" element={<AdminSearchSettings />} />
-                  <Route path="ai-assistant" element={<AdminDillo />} />
-                  <Route path="dillo" element={<AdminDillo />} />
-                  <Route path="banners" element={<AdminBanners />} />
-                  <Route path="payments" element={<AdminPayments />} />
-                  <Route path="audit-logs" element={<AdminAuditLogs />} />
-                  <Route path="settings" element={<AdminHospitalSettings />} />
-                  <Route path="appointment-letter" element={<AdminLetterSettings />} />
-                  <Route path="reports" element={<AdminReports />} />
-                  <Route path="profile" element={<AdminProfile />} />
-                </Route>
+                  {/* User / Patient Portal Routes (/dashboard and /user) */}
+                  <Route path="/dashboard" element={<UserLayout />}>
+                    <Route index element={<UserDashboard />} />
+                    <Route path="appointments" element={<UserAppointments />} />
+                    <Route path="appointments/:id" element={<AppointmentDetailsPage />} />
+                    <Route path="profile" element={<UserProfile />} />
+                  </Route>
+                  <Route path="/user" element={<UserLayout />}>
+                    <Route index element={<UserDashboard />} />
+                    <Route path="appointments" element={<UserAppointments />} />
+                    <Route path="appointments/:id" element={<AppointmentDetailsPage />} />
+                    <Route path="profile" element={<UserProfile />} />
+                  </Route>
 
-                {/* User / Patient Portal Routes (/dashboard and /user) */}
-                <Route path="/dashboard" element={<UserLayout />}>
-                  <Route index element={<UserDashboard />} />
-                  <Route path="appointments" element={<UserAppointments />} />
-                  <Route path="appointments/:id" element={<AppointmentDetailsPage />} />
-                  <Route path="profile" element={<UserProfile />} />
-                </Route>
-                <Route path="/user" element={<UserLayout />}>
-                  <Route index element={<UserDashboard />} />
-                  <Route path="appointments" element={<UserAppointments />} />
-                  <Route path="appointments/:id" element={<AppointmentDetailsPage />} />
-                  <Route path="profile" element={<UserProfile />} />
-                </Route>
+                  {/* Public Hospital Website Routes & Dynamic CMS Pages */}
+                  <Route element={<PublicLayout />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/doctors" element={<Doctors />} />
+                    <Route path="/doctors/:slug" element={<DoctorProfile />} />
+                    <Route path="/doctor/:slug" element={<DoctorProfile />} />
+                    <Route path="/specialities" element={<Specialities />} />
+                    <Route path="/services" element={<Services />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/appointment" element={<AppointmentBooking />} />
+                    <Route path="/book-appointment" element={<AppointmentBooking />} />
+                    <Route path="/book-appointment/:id" element={<AppointmentBooking />} />
+                    <Route path="/appointment/success" element={<PaymentSuccessPage />} />
+                    <Route path="/payment" element={<PaymentPage />} />
+                    <Route path="/payment/success" element={<PaymentSuccessPage />} />
+                    <Route path="/appointment/:id" element={<AppointmentDetailsPage />} />
+                    <Route path="/appointments/view/:id" element={<AppointmentVerificationPage />} />
+                    <Route path="/appointment/verify/:id" element={<AppointmentVerificationPage />} />
+                    <Route path="/appointment/verify" element={<AppointmentVerificationPage />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/terms" element={<TermsPage />} />
+                    <Route path="/privacy" element={<PrivacyPage />} />
 
-                {/* Public Hospital Website Routes & Dynamic CMS Pages */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/doctors" element={<Doctors />} />
-                  <Route path="/doctors/:slug" element={<DoctorProfile />} />
-                  <Route path="/doctor/:slug" element={<DoctorProfile />} />
-                  <Route path="/specialities" element={<Specialities />} />
-                  <Route path="/services" element={<Services />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/appointment" element={<AppointmentBooking />} />
-                  <Route path="/book-appointment" element={<AppointmentBooking />} />
-                  <Route path="/book-appointment/:id" element={<AppointmentBooking />} />
-                  <Route path="/appointment/success" element={<PaymentSuccessPage />} />
-                  <Route path="/payment" element={<PaymentPage />} />
-                  <Route path="/payment/success" element={<PaymentSuccessPage />} />
-                  <Route path="/appointment/:id" element={<AppointmentDetailsPage />} />
-                  <Route path="/appointments/view/:id" element={<AppointmentVerificationPage />} />
-                  <Route path="/appointment/verify/:id" element={<AppointmentVerificationPage />} />
-                  <Route path="/appointment/verify" element={<AppointmentVerificationPage />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/terms" element={<TermsPage />} />
-                  <Route path="/privacy" element={<PrivacyPage />} />
-
-                  {/* Catch-all for Dynamic CMS Pages & Public 404 */}
-                  <Route path="*" element={<DynamicPage />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </ToastProvider>
-        </DropdownProvider>
-      </SettingsProvider>
-    </AuthProvider>
+                    {/* Catch-all for Dynamic CMS Pages & Public 404 */}
+                    <Route path="*" element={<DynamicPage />} />
+                  </Route>
+                </Routes>
+              </ToastProvider>
+            </DropdownProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 
 };

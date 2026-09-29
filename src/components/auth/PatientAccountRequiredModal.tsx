@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Lock, UserPlus, LogIn, ShieldCheck, Heart } from 'lucide-react';
 
@@ -19,7 +18,6 @@ export const PatientAccountRequiredModal: React.FC<PatientAccountRequiredModalPr
   onClose,
   redirectUrl = '/appointment',
 }) => {
-  const navigate = useNavigate();
 
   // Close on Escape key
   useEffect(() => {
@@ -50,12 +48,12 @@ export const PatientAccountRequiredModal: React.FC<PatientAccountRequiredModalPr
 
   const handleCreateAccount = () => {
     onClose();
-    navigate(`/login?mode=register&redirect=${encodeURIComponent(targetRedirect)}`);
+    window.location.href = `/login?mode=register&redirect=${encodeURIComponent(targetRedirect)}`;
   };
 
   const handleLogin = () => {
     onClose();
-    navigate(`/login?mode=login&redirect=${encodeURIComponent(targetRedirect)}`);
+    window.location.href = `/login?mode=login&redirect=${encodeURIComponent(targetRedirect)}`;
   };
 
   return (
