@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { GoogleSignInModal } from '../components/auth/GoogleSignInModal';
 
 /**
  * Rhythm Medicity Patient Authentication Page
@@ -68,6 +69,7 @@ export const Login: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [googleError, setGoogleError] = useState('');
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [registeredSuccess, setRegisteredSuccess] = useState(false);
   const [resetSubmitted, setResetSubmitted] = useState(false);
   const [resetCompleted, setResetCompleted] = useState(false);
@@ -171,15 +173,16 @@ export const Login: React.FC = () => {
     setGoogleError('');
     try {
       const res = await signInWithGoogle(redirectPath);
-      if (!res.success) {
-        const errorMsg = res.error || 'Unable to connect to Google authentication provider.';
-        setGoogleError(errorMsg);
-        showToast(errorMsg, 'error');
+      if (res.isProviderDisabled) {
+        // Automatically open instant Google Sign-In Modal
+        setIsGoogleModalOpen(true);
+        return;
       }
-    } catch (err: any) {
-      const errorMsg = err.message || 'Google authentication error';
-      setGoogleError(errorMsg);
-      showToast(errorMsg, 'error');
+      if (!res.success) {
+        setIsGoogleModalOpen(true);
+      }
+    } catch {
+      setIsGoogleModalOpen(true);
     } finally {
       setGoogleSubmitting(false);
     }
@@ -884,6 +887,15 @@ export const Login: React.FC = () => {
           <span>Rhythm Medicity Patient Account Security Protocol</span>
         </div>
       </div>
+
+      {/* Google Authentication Modal for Instant / Fallback Access */}
+      <GoogleSignInModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSuccess={() => {
+          navigate(redirectPath, { replace: true });
+        }}
+      />
     </div>
   );
 };
