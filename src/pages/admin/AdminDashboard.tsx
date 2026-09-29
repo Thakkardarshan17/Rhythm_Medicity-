@@ -81,7 +81,7 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="w-full min-w-0 space-y-8">
       {/* Top Header */}
       <ScrollReveal animation="fade-down">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -310,10 +310,31 @@ export const AdminDashboard: React.FC = () => {
               </table>
             </div>
           ) : (
-            <div className="p-12 text-center text-slate-500 text-xs">
-              <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <p className="font-bold text-slate-700">No Appointments Recorded</p>
-              <p className="text-slate-400 mt-1">Confirmed appointments will appear here automatically via live sync.</p>
+            <div className="p-8 sm:p-12 text-center text-slate-500 text-xs">
+              <div className="w-12 h-12 rounded-2xl bg-[#E0F2ED] border border-[#006655]/20 flex items-center justify-center mx-auto mb-3 text-[#006655]">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <p className="font-bold text-slate-800 text-sm">No Appointments Recorded Yet</p>
+              <p className="text-slate-400 mt-1 max-w-sm mx-auto">
+                Confirmed appointments will appear here automatically via live sync.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+                <Link
+                  to="/appointment"
+                  target="_blank"
+                  className="btn-shimmer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#006655] hover:bg-[#004C3D] text-white font-bold text-xs shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5 text-[#C4A760]" />
+                  <span>Book New Appointment</span>
+                </Link>
+                <Link
+                  to="/admin/appointments"
+                  className="btn-premium inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs shadow-xs"
+                >
+                  <span>Go to Appointments Console</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           )}
         </div>

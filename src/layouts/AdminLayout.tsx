@@ -90,7 +90,7 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F4EC] flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[#F7F4EC] flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
       {/* Sidebar for Desktop */}
       <aside className="hidden lg:flex w-64 h-screen sticky top-0 bg-[#003329] text-[#93D3C3] flex-col shrink-0 shadow-xl border-r border-[#004C3D] z-30">
         {/* Brand & Live status */}
@@ -231,8 +231,10 @@ export const AdminLayout: React.FC = () => {
       )}
 
       {/* Main Content Pane */}
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-        <Outlet />
+      <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden">
+        <div className="w-full max-w-7xl mx-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
