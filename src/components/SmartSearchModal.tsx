@@ -533,8 +533,8 @@ export const SmartSearchModal: React.FC<SmartSearchModalProps> = ({ isOpen, onCl
         >
 
           {/* ── Search Input Bar ─────────────────────────────────────── */}
-          <div className="flex items-center px-4 sm:px-6 py-4 border-b border-slate-100 gap-2.5 sm:gap-3">
-            <Search className="w-5 h-5 text-[#006655] shrink-0" />
+          <div className="flex items-center px-3 sm:px-6 py-3 sm:py-4 border-b border-slate-100 gap-1.5 sm:gap-3">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#006655] shrink-0" />
             <input
               ref={inputRef}
               type="text"
@@ -544,12 +544,12 @@ export const SmartSearchModal: React.FC<SmartSearchModalProps> = ({ isOpen, onCl
                 setShowAllCategory(null);
                 if (voiceState === 'result') setVoiceState('idle');
               }}
-              placeholder="Search doctors, departments, services..."
-              className="w-full text-slate-800 placeholder-slate-400 bg-transparent text-base sm:text-lg focus:outline-none font-medium"
+              placeholder="Search doctors, services..."
+              className="w-full text-slate-800 placeholder-slate-400 bg-transparent text-sm sm:text-lg focus:outline-none font-medium min-w-0"
               aria-label="Search"
               autoComplete="off"
             />
-            {loading && <Loader2 className="w-5 h-5 text-[#006655] animate-spin shrink-0" />}
+            {loading && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#006655] animate-spin shrink-0" />}
             {(query || isShowingAll) && !loading && (
               <button
                 onClick={() => {
@@ -559,7 +559,7 @@ export const SmartSearchModal: React.FC<SmartSearchModalProps> = ({ isOpen, onCl
                   setVoiceState('idle');
                   inputRef.current?.focus();
                 }}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 transition cursor-pointer shrink-0"
                 aria-label="Clear"
               >
                 <X className="w-4 h-4" />
@@ -570,7 +570,7 @@ export const SmartSearchModal: React.FC<SmartSearchModalProps> = ({ isOpen, onCl
             <button
               onClick={startVoiceSearch}
               disabled={voiceState === 'error_not_supported'}
-              className={`p-2 rounded-xl transition-all duration-200 shrink-0 cursor-pointer ${currentVoiceUi.btnClass} ${
+              className={`p-1.5 sm:p-2 rounded-xl transition-all duration-200 shrink-0 cursor-pointer ${currentVoiceUi.btnClass} ${
                 voiceState === 'listening' && !prefersReducedMotion ? 'mic-pulse' : ''
               }`}
               aria-label="Speak to Search"
@@ -583,10 +583,10 @@ export const SmartSearchModal: React.FC<SmartSearchModalProps> = ({ isOpen, onCl
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowLangPicker((p) => !p)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition cursor-pointer shadow-2xs"
+                className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition cursor-pointer shadow-2xs"
                 title="Voice language"
               >
-                <Globe className="w-3.5 h-3.5 text-slate-500" />
+                <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500" />
                 <span>{selectedLang.short}</span>
               </button>
               {showLangPicker && (
@@ -610,11 +610,19 @@ export const SmartSearchModal: React.FC<SmartSearchModalProps> = ({ isOpen, onCl
               )}
             </div>
 
+            {/* Close Button on Mobile / ESC on Desktop */}
             <button
               onClick={() => { stopListening(); onClose(); }}
-              className="text-xs font-mono font-bold px-2.5 py-1.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition shrink-0 cursor-pointer"
+              className="hidden sm:inline-block text-xs font-mono font-bold px-2.5 py-1.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition shrink-0 cursor-pointer"
             >
               ESC
+            </button>
+            <button
+              onClick={() => { stopListening(); onClose(); }}
+              className="sm:hidden p-1.5 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-lg transition shrink-0 cursor-pointer"
+              aria-label="Close search"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
 

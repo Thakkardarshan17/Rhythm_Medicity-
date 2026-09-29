@@ -83,7 +83,7 @@ export const UserLayout: React.FC = () => {
               <div className="w-8 h-8 rounded-lg bg-white p-0.5 flex items-center justify-center shrink-0 border border-[#C4A760]/40 shadow-xs">
                 <img src="/emblem.png" alt="RHYTHM MEDICITY" className="w-full h-full object-contain" />
               </div>
-              <span className="font-extrabold text-sm sm:text-base text-[#006655]">
+              <span className="font-extrabold text-xs sm:text-base text-[#006655] truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
                 {hospitalSettings.hospital_name || 'RHYTHM MEDICITY'}
               </span>
               <span className="hidden sm:inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-[#E0F2ED] text-[#006655]">
@@ -95,11 +95,11 @@ export const UserLayout: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/appointment"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#006655] hover:bg-[#004C3D] text-white text-xs font-semibold shadow-xs transition"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 rounded-xl bg-[#006655] hover:bg-[#004C3D] text-white text-xs font-semibold shadow-xs transition shrink-0"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Book</span>
-              <span>Appointment</span>
+              <span>Book</span>
+              <span className="hidden sm:inline">Appointment</span>
             </Link>
 
             <div className="text-right hidden md:block">

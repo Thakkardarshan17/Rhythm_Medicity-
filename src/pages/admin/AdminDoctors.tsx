@@ -327,7 +327,7 @@ export const AdminDoctors: React.FC = () => {
           <TableSkeleton rows={5} />
         ) : filteredDoctors.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[750px]">
               <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200/60">
                 <tr>
                   <th className="px-6 py-3.5">Doctor</th>

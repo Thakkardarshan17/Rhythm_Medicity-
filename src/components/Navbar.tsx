@@ -84,12 +84,15 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Global shortcut (Ctrl+K / Cmd+K) to open Smart Search Modal
+  // Global shortcut (Ctrl+K / Cmd+K) to open Smart Search Modal, and Escape to close mobile menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setSearchModalOpen(true);
+      } else if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setActiveDropdown(null);
       }
     };
     const handleCustomOpen = () => setSearchModalOpen(true);
@@ -185,7 +188,7 @@ export const Navbar: React.FC = () => {
           style={{ minHeight: `${Math.min(Math.max(68, logoHeight + 14), 84)}px` }}
         >
           {/* LEFT: Hospital Logo */}
-          <div className="flex items-center shrink-0">
+          <div className="flex items-center shrink-0 min-w-0">
             <Link
               to="/"
               className="flex items-center group py-1"
@@ -197,7 +200,7 @@ export const Navbar: React.FC = () => {
                 style={{
                   height: `${Math.min(logoHeight, 58)}px`,
                 }}
-                className="w-auto max-h-[46px] sm:max-h-[52px] xl:max-h-[62px] object-contain shrink-0 group-hover:scale-[1.02] transition-all duration-300"
+                className="w-auto max-h-[36px] xs:max-h-[42px] sm:max-h-[50px] xl:max-h-[58px] max-w-[125px] xs:max-w-[170px] sm:max-w-none object-contain shrink-0 group-hover:scale-[1.02] transition-all duration-300"
               />
             </Link>
           </div>
@@ -371,19 +374,17 @@ export const Navbar: React.FC = () => {
                   ⌘K
                 </kbd>
               </div>
-            </button>
-
-            {/* Mobile / Tablet Compact Search Trigger */}
+            </button>            {/* Mobile / Tablet Compact Search Trigger */}
             <button
               type="button"
               onClick={() => setSearchModalOpen(true)}
-              className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-[#004C3D] hover:text-[#006655] bg-white hover:bg-[#E0F2ED]/40 rounded-xl border border-[#E5DEC9] hover:border-[#006655]/40 text-xs font-semibold transition-all duration-200 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs group"
+              className="lg:hidden flex items-center justify-center p-2 sm:px-3 sm:py-2 text-[#004C3D] hover:text-[#006655] bg-white hover:bg-[#E0F2ED]/40 rounded-xl border border-[#E5DEC9] hover:border-[#006655]/40 text-xs font-semibold transition-all duration-200 shrink-0 cursor-pointer shadow-2xs group"
               aria-label="Open Search"
               title="Search or speak to search"
             >
-              <Search className="w-3.5 h-3.5 text-[#006655] shrink-0 group-hover:scale-110 transition-transform" />
-              <span className="hidden sm:inline text-xs text-[#4F7B72] font-medium">Search</span>
-              <Mic className="w-3 h-3 text-[#006655] ml-0.5" />
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#006655] shrink-0 group-hover:scale-110 transition-transform" />
+              <span className="hidden md:inline text-xs text-[#4F7B72] font-medium ml-1.5">Search</span>
+              <Mic className="hidden xs:inline-block w-3 h-3 text-[#006655] ml-1" />
             </button>
 
             {/* Book Appointment CTA */}
@@ -395,14 +396,14 @@ export const Navbar: React.FC = () => {
               <span className="whitespace-nowrap">Book Appointment</span>
             </Link>
 
-            {/* Patient Account / Login Action (Section 1: Default Logged Out State) */}
+            {/* Patient Account / Login Action */}
             {user ? (
               <Link
                 to="/dashboard"
-                className="flex items-center gap-1.5 xl:gap-2 bg-white hover:bg-[#E0F2ED] text-[#004C3D] text-xs 2xl:text-sm font-bold px-2.5 py-2 xl:px-3 rounded-xl transition whitespace-nowrap shrink-0 border border-[#E5DEC9] shadow-2xs hover:shadow-xs group"
+                className="flex items-center gap-1.5 xl:gap-2 bg-white hover:bg-[#E0F2ED] text-[#004C3D] text-xs 2xl:text-sm font-bold p-1.5 sm:px-2.5 sm:py-2 xl:px-3 rounded-xl transition whitespace-nowrap shrink-0 border border-[#E5DEC9] shadow-2xs hover:shadow-xs group"
                 title="My Account / Profile"
               >
-                <div className="w-5 h-5 xl:w-6 xl:h-6 rounded-full bg-[#E0F2ED] text-[#006655] font-bold text-[11px] xl:text-xs flex items-center justify-center shrink-0 border border-[#006655]/20 overflow-hidden">
+                <div className="w-6 h-6 sm:w-6 sm:h-6 xl:w-6 xl:h-6 rounded-full bg-[#E0F2ED] text-[#006655] font-bold text-[11px] xl:text-xs flex items-center justify-center shrink-0 border border-[#006655]/20 overflow-hidden">
                   {patientProfile?.photo_url ? (
                     <img
                       src={patientProfile.photo_url}
@@ -418,17 +419,17 @@ export const Navbar: React.FC = () => {
                   )}
                 </div>
                 <span className="hidden md:inline whitespace-nowrap max-w-[100px] xl:max-w-[130px] truncate">
-                  {patientProfile?.full_name ? `${patientProfile.full_name.split(' ')[0]} (My Account)` : 'My Account / Profile'}
+                  {patientProfile?.full_name ? `${patientProfile.full_name.split(' ')[0]} (Account)` : 'My Account'}
                 </span>
               </Link>
             ) : (
               <Link
                 to="/login"
-                className="flex items-center gap-1.5 xl:gap-2 bg-white hover:bg-[#E0F2ED] text-[#004C3D] hover:text-[#006655] text-xs 2xl:text-sm font-bold px-2.5 py-2 xl:px-3.5 rounded-xl border border-[#E5DEC9] hover:border-[#006655]/40 transition whitespace-nowrap shrink-0 shadow-2xs"
+                className="flex items-center gap-1.5 xl:gap-2 bg-white hover:bg-[#E0F2ED] text-[#004C3D] hover:text-[#006655] text-xs 2xl:text-sm font-bold p-2 sm:px-2.5 sm:py-2 xl:px-3.5 rounded-xl border border-[#E5DEC9] hover:border-[#006655]/40 transition whitespace-nowrap shrink-0 shadow-2xs"
                 title="Login / Sign Up"
               >
                 <User className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-[#006655] shrink-0" />
-                <span className="whitespace-nowrap">Login / Sign Up</span>
+                <span className="hidden sm:inline whitespace-nowrap">Login / Sign Up</span>
               </Link>
             )}
 
@@ -436,7 +437,7 @@ export const Navbar: React.FC = () => {
             <motion.button
               whileTap={{ scale: 0.92 }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden relative p-2.5 rounded-xl text-[#004C3D] bg-white border border-[#E5DEC9] hover:bg-[#E0F2ED] hover:border-[#006655]/40 transition-all duration-200 shrink-0 shadow-2xs focus:outline-none cursor-pointer"
+              className="lg:hidden relative p-2 sm:p-2.5 rounded-xl text-[#004C3D] bg-white border border-[#E5DEC9] hover:bg-[#E0F2ED] hover:border-[#006655]/40 transition-all duration-200 shrink-0 shadow-2xs focus:outline-none cursor-pointer"
               aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -448,7 +449,7 @@ export const Navbar: React.FC = () => {
                     exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <X className="w-6 h-6 text-[#006655]" />
+                    <X className="w-5 h-5 sm:w-6 sm:h-6 text-[#006655]" />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -458,7 +459,7 @@ export const Navbar: React.FC = () => {
                     exit={{ rotate: -90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <MenuIcon className="w-6 h-6 text-[#006655]" />
+                    <MenuIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#006655]" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -477,7 +478,7 @@ export const Navbar: React.FC = () => {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
                 onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden fixed inset-0 top-20 bg-black/40 backdrop-blur-xs z-30"
+                className="lg:hidden fixed inset-0 top-16 sm:top-20 bg-black/50 backdrop-blur-xs z-30"
                 aria-hidden="true"
               />
 
@@ -489,7 +490,7 @@ export const Navbar: React.FC = () => {
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="lg:hidden relative z-40 bg-[#FBF8F1] border-b border-[#E5DEC9] shadow-2xl overflow-hidden"
               >
-                <div className="max-h-[calc(100vh-6rem)] overflow-y-auto px-4 pt-3 pb-6 space-y-3">
+                <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto px-4 pt-3 pb-8 space-y-3 overscroll-contain">
                   {/* Quick Smart Search Trigger in Mobile Menu */}
                   <div className="pt-1">
                     <button

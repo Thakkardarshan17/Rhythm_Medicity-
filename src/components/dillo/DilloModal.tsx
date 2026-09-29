@@ -624,7 +624,7 @@ export const DilloModal: React.FC<DilloModalProps> = ({
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-6 bg-black/40 backdrop-blur-xs pointer-events-auto"
     >
       {/* Main Container */}
-      <div className="w-full sm:max-w-[440px] h-[92vh] sm:h-[650px] max-h-[95vh] bg-[#F7F4EC] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#006655]/20 animate-in fade-in slide-in-from-bottom-6 duration-300">
+      <div className="w-full sm:max-w-[440px] h-[90dvh] sm:h-[650px] max-h-[92dvh] bg-[#F7F4EC] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[#006655]/20 animate-in fade-in slide-in-from-bottom-6 duration-300">
         
         {/* ──────── 1. ASSISTANT HEADER ──────── */}
         <div className="bg-gradient-to-r from-[#003329] via-[#004C3D] to-[#006655] text-white p-4 flex items-center justify-between shadow-md relative z-10">

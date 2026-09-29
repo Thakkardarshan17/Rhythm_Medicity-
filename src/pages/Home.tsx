@@ -45,6 +45,34 @@ export const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Mobile touch swipe handling for Hero Carousel
+  const touchStartXRef = useRef<number | null>(null);
+  const touchEndXRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartXRef.current === null || touchEndXRef.current === null) return;
+    const deltaX = touchStartXRef.current - touchEndXRef.current;
+    const minSwipeDistance = 45;
+    if (banners.length > 1) {
+      if (deltaX > minSwipeDistance) {
+        setCurrentSlide((prev) => (prev + 1) % banners.length);
+      } else if (deltaX < -minSwipeDistance) {
+        setCurrentSlide((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
+      }
+    }
+    touchStartXRef.current = null;
+    touchEndXRef.current = null;
+  };
+
   // Parallax Scroll Tracking for Hero
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
@@ -247,7 +275,10 @@ export const Home: React.FC = () => {
           <div
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="relative w-full overflow-hidden select-none bg-transparent"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="relative w-full overflow-hidden select-none bg-transparent touch-pan-y"
           >
             {banners.map((banner, index) => {
               const isCurrent = index === currentSlide;
@@ -267,7 +298,7 @@ export const Home: React.FC = () => {
                       <img
                         src={banner.image_url}
                         alt={banner.title || 'Hospital Banner'}
-                        className="w-full h-auto block select-none"
+                        className="w-full h-[220px] xs:h-[260px] sm:h-[340px] md:h-[420px] lg:h-auto min-h-[200px] object-cover sm:object-contain object-center block select-none"
                         loading={index === 0 ? 'eager' : 'lazy'}
                       />
                     </Link>
@@ -276,19 +307,19 @@ export const Home: React.FC = () => {
                       <img
                         src={banner.image_url}
                         alt={banner.title || 'Hospital Banner'}
-                        className="w-full h-auto block select-none"
+                        className="w-full h-[220px] xs:h-[260px] sm:h-[340px] md:h-[420px] lg:h-auto min-h-[200px] object-cover sm:object-contain object-center block select-none"
                         loading={index === 0 ? 'eager' : 'lazy'}
                       />
 
                       {/* Optional sleek floating CTA button if cta_text is configured */}
                       {banner.cta_text && (
-                        <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-12 z-20 pointer-events-auto">
+                        <div className="absolute bottom-3 xs:bottom-4 sm:bottom-10 left-3 xs:left-4 sm:left-12 z-20 pointer-events-auto">
                           <Link
                             to={banner.cta_link || '/appointment'}
-                            className="btn-shimmer btn-gold px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm shadow-xl inline-flex items-center gap-2 border border-white/20 backdrop-blur-xs"
+                            className="btn-shimmer btn-gold px-3.5 py-2 sm:px-7 sm:py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm shadow-xl inline-flex items-center gap-1.5 sm:gap-2 border border-white/20 backdrop-blur-xs"
                           >
                             <span>{banner.cta_text}</span>
-                            <ArrowRight className="w-4 h-4 icon-hover-arrow" />
+                            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 icon-hover-arrow" />
                           </Link>
                         </div>
                       )}
@@ -303,30 +334,30 @@ export const Home: React.FC = () => {
               <>
                 <button
                   onClick={() => setCurrentSlide((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                  className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-black/40 hover:bg-black/70 text-white border border-white/20 backdrop-blur-md transition-all hover:scale-110 active:scale-95 shadow-lg"
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-1.5 sm:p-3 rounded-full bg-black/40 hover:bg-black/70 text-white border border-white/20 backdrop-blur-md transition-all hover:scale-110 active:scale-95 shadow-lg"
                   aria-label="Previous slide"
                 >
-                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
                 <button
                   onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-                  className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 rounded-full bg-black/40 hover:bg-black/70 text-white border border-white/20 backdrop-blur-md transition-all hover:scale-110 active:scale-95 shadow-lg"
+                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-1.5 sm:p-3 rounded-full bg-black/40 hover:bg-black/70 text-white border border-white/20 backdrop-blur-md transition-all hover:scale-110 active:scale-95 shadow-lg"
                   aria-label="Next slide"
                 >
-                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
               </>
             )}
 
             {/* Slider Dots */}
             {banners.length > 1 && bannerSettings.show_pagination_dots !== false && (
-              <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+              <div className="absolute bottom-2.5 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/35 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md border border-white/10">
                 {banners.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentSlide(i)}
-                    className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${
-                      i === currentSlide ? 'w-6 sm:w-8 bg-[#C4A760]' : 'w-2 sm:w-2.5 bg-white/50 hover:bg-white/80'
+                    className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 ${
+                      i === currentSlide ? 'w-5 sm:w-8 bg-[#C4A760]' : 'w-1.5 sm:w-2.5 bg-white/50 hover:bg-white/80'
                     }`}
                     aria-label={`Go to slide ${i + 1}`}
                   />
@@ -406,36 +437,44 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 2. QUICK ACTIONS SECTION WITH STAGGERED REVEAL */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 sm:-mt-14 relative z-30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <section className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 -mt-4 sm:-mt-10 lg:-mt-14 relative z-30">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
           {quickActions.map((action, idx) => {
             const IconComponent = action.icon;
+            const isFeatured = idx === 0;
             return (
-              <ScrollReveal key={action.title} animation="fade-up" delay={idx * 0.08}>
+              <ScrollReveal
+                key={action.title}
+                animation="fade-up"
+                delay={idx * 0.08}
+                className={isFeatured ? 'col-span-2 sm:col-span-1 lg:col-span-1' : ''}
+              >
                 <Link
                   to={action.link}
-                  className={`card-lift p-5 rounded-2xl group flex flex-col justify-between h-full ${action.color}`}
+                  className={`card-lift p-3.5 sm:p-5 rounded-2xl group flex flex-col justify-between h-full ${action.color}`}
                 >
                   <div>
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${
-                        idx === 0
-                          ? 'bg-[#C4A760] text-white shadow-sm'
-                          : 'bg-[#F6F0DC] text-[#C4A760] border border-[#EADFB9]'
-                      }`}
-                    >
-                      <IconComponent className="w-6 h-6 shrink-0" />
+                    <div className="flex items-center sm:block gap-2.5 mb-2 sm:mb-3">
+                      <div
+                        className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                          isFeatured
+                            ? 'bg-[#C4A760] text-white shadow-xs'
+                            : 'bg-[#F6F0DC] text-[#C4A760] border border-[#EADFB9]'
+                        }`}
+                      >
+                        <IconComponent className="w-5 h-5 sm:w-5 sm:h-5 shrink-0" />
+                      </div>
+                      <h3 className="font-black text-sm sm:text-base lg:text-lg tracking-tight text-[#006655] leading-snug">
+                        {action.title}
+                      </h3>
                     </div>
-                    <h3 className="font-black text-base sm:text-lg tracking-tight mb-1.5 text-[#006655]">
-                      {action.title}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-[#004C3D]">
+                    <p className="text-[11px] sm:text-xs leading-snug sm:leading-relaxed text-[#004C3D] line-clamp-2 sm:line-clamp-none">
                       {action.desc}
                     </p>
                   </div>
-                  <div className="mt-4 pt-3 flex items-center justify-between text-xs font-bold text-[#C4A760] border-t border-[#E5DEC9] group-hover:text-[#B0934C]">
+                  <div className="mt-2.5 sm:mt-4 pt-2 sm:pt-3 flex items-center justify-between text-[11px] sm:text-xs font-bold text-[#C4A760] border-t border-[#E5DEC9] group-hover:text-[#B0934C]">
                     <span>Explore</span>
-                    <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transform group-hover:translate-x-1.5 transition-transform" />
                   </div>
                 </Link>
               </ScrollReveal>
@@ -474,10 +513,10 @@ export const Home: React.FC = () => {
             <CardSkeleton />
           </div>
         ) : specialities.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {specialities.slice(0, 8).map((spec, idx) => (
               <ScrollReveal key={spec.id} animation="fade-up" delay={(idx % 4) * 0.08}>
-                <div className="card-lift bg-[#FBF8F1] rounded-2xl border border-[#E5DEC9] p-6 shadow-xs group flex flex-col justify-between h-full">
+                <div className="card-lift bg-[#FBF8F1] rounded-2xl border border-[#E5DEC9] p-4 sm:p-6 shadow-xs group flex flex-col justify-between h-full">
                   <div>
                     <div className="w-12 h-12 rounded-xl bg-[#E0F2ED] text-[#006655] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <Stethoscope className="w-6 h-6" />
@@ -726,47 +765,47 @@ export const Home: React.FC = () => {
         </ScrollReveal>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />
           </div>
         ) : doctors.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {doctors.slice(0, 6).map((doc, idx) => (
               <ScrollReveal key={doc.id} animation="fade-up" delay={(idx % 3) * 0.1}>
                 <div className="card-lift bg-[#FBF8F1] rounded-2xl border border-[#E5DEC9] overflow-hidden shadow-xs flex flex-col justify-between h-full group">
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
+                  <div className="p-4 sm:p-6">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       <div className="relative overflow-hidden rounded-2xl shrink-0">
                         {doc.photo_url ? (
                           <img
                             src={doc.photo_url}
                             alt={doc.full_name}
-                            className="w-20 h-20 rounded-2xl object-cover border-2 border-[#E0F2ED] img-zoom"
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#E0F2ED] img-zoom"
                           />
                         ) : (
-                          <div className="w-20 h-20 rounded-2xl bg-[#E0F2ED] text-[#006655] flex items-center justify-center font-bold text-2xl">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#E0F2ED] text-[#006655] flex items-center justify-center font-bold text-xl sm:text-2xl">
                             {doc.full_name.charAt(0)}
                           </div>
                         )}
                       </div>
-                      <div className="space-y-1 min-w-0">
+                      <div className="space-y-1 min-w-0 flex-1">
                         <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#E0F2ED] text-[#006655] uppercase">
                           {doc.speciality?.name || 'Specialist'}
                         </span>
-                        <h3 className="font-bold text-base text-[#006655] leading-snug truncate group-hover:text-[#004C3D]">
+                        <h3 className="font-bold text-sm sm:text-base text-[#006655] leading-snug truncate group-hover:text-[#004C3D]">
                           {doc.full_name}
                         </h3>
                         <p className="text-xs text-[#4F7B72] font-medium truncate">{doc.qualification}</p>
                         <div className="flex items-center gap-1 text-xs text-[#82A39B]">
-                          <Award className="w-3.5 h-3.5 text-[#C4A760]" />
-                          <span>{doc.experience_years} Years Experience</span>
+                          <Award className="w-3.5 h-3.5 text-[#C4A760] shrink-0" />
+                          <span className="truncate">{doc.experience_years} Years Experience</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-[#E5DEC9] flex items-center justify-between text-xs">
+                    <div className="mt-3.5 sm:mt-4 pt-3 border-t border-[#E5DEC9] flex items-center justify-between text-xs">
                       <span className="text-[#4F7B72]">Consultation Fee</span>
                       <span className="font-extrabold text-[#006655] text-sm">
                         {formatCurrency(doc.consultation_fee)}
@@ -774,7 +813,7 @@ export const Home: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-[#F4EEDF] p-4 border-t border-[#E5DEC9] flex items-center gap-2">
+                  <div className="bg-[#F4EEDF] p-3 sm:p-4 border-t border-[#E5DEC9] flex items-center gap-2">
                     <Link
                       to={`/doctors/${doc.slug || doc.id}`}
                       className="btn-premium flex-1 text-center py-2 text-xs font-semibold text-[#004C3D] bg-white border border-[#E5DEC9] hover:bg-[#E0F2ED] rounded-xl transition"

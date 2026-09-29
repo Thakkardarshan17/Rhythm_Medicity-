@@ -40,7 +40,7 @@ export const DilloFloatingButton: React.FC = () => {
       `}</style>
 
       {/* Floating Action Button Container */}
-      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 group">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 group">
         
         {/* Quick Voice Trigger Badge on hover */}
         {dilloSettings.voice_enabled && (
@@ -60,7 +60,7 @@ export const DilloFloatingButton: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenChat}
-          className="relative flex items-center gap-2.5 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-[#003329] via-[#004C3D] to-[#006655] text-white shadow-xl hover:shadow-2xl border-2 border-[#C4A760]/60 hover:border-[#C4A760] transition-all duration-300 active:scale-95"
+          className="relative flex items-center gap-2 sm:gap-2.5 px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-[#003329] via-[#004C3D] to-[#006655] text-white shadow-xl hover:shadow-2xl border-2 border-[#C4A760]/60 hover:border-[#C4A760] transition-all duration-300 active:scale-95"
           style={{ animation: 'dilloPulse 3s ease-in-out infinite' }}
           aria-label={`Open ${assistantName} AI Healthcare Voice Assistant`}
         >
@@ -71,7 +71,7 @@ export const DilloFloatingButton: React.FC = () => {
           />
 
           {/* Assistant Avatar / Icon */}
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C4A760] to-[#997E3B] text-white flex items-center justify-center font-black text-xs shadow-inner overflow-hidden border border-white/30 shrink-0">
+          <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#C4A760] to-[#997E3B] text-white flex items-center justify-center font-black text-xs shadow-inner overflow-hidden border border-white/30 shrink-0">
             {dilloSettings.assistant_avatar ? (
               <img
                 src={dilloSettings.assistant_avatar}
@@ -79,7 +79,7 @@ export const DilloFloatingButton: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Sparkles className="w-4 h-4 text-white" />
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             )}
           </div>
 

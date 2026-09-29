@@ -198,8 +198,8 @@ export const AdminLayout: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#003329]/98 backdrop-blur-md text-[#93D3C3] px-4 py-4 space-y-2 border-b border-[#004C3D] animate-in slide-in-from-top duration-200">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="lg:hidden bg-[#003329]/98 backdrop-blur-md text-[#93D3C3] px-4 py-4 space-y-2 border-b border-[#004C3D] animate-in slide-in-from-top duration-200 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain shadow-2xl">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
             {allNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -223,7 +223,7 @@ export const AdminLayout: React.FC = () => {
             <Link to="/" target="_blank" className="text-[#C4A760] flex items-center gap-1">
               <span>View Site</span> <ExternalLink className="w-3.5 h-3.5" />
             </Link>
-            <button onClick={handleLogout} className="text-rose-400 flex items-center gap-1">
+            <button onClick={handleLogout} className="text-rose-400 flex items-center gap-1 cursor-pointer">
               <LogOut className="w-3.5 h-3.5" /> Sign Out
             </button>
           </div>
