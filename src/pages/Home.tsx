@@ -348,22 +348,6 @@ export const Home: React.FC = () => {
                 </button>
               </>
             )}
-
-            {/* Slider Dots */}
-            {banners.length > 1 && bannerSettings.show_pagination_dots !== false && (
-              <div className="absolute bottom-2.5 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/35 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md border border-white/10">
-                {banners.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentSlide(i)}
-                    className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 ${
-                      i === currentSlide ? 'w-5 sm:w-8 bg-[#C4A760]' : 'w-1.5 sm:w-2.5 bg-white/50 hover:bg-white/80'
-                    }`}
-                    aria-label={`Go to slide ${i + 1}`}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         ) : (
           // Elegant Default Visual with Parallax Layers

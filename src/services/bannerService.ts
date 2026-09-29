@@ -13,7 +13,7 @@ export const DEFAULT_BANNER_CAROUSEL_SETTINGS: BannerCarouselSettings = {
   transition_speed: 'normal',
   pause_on_hover: true,
   show_navigation_arrows: true,
-  show_pagination_dots: true,
+  show_pagination_dots: false,
   updated_at: new Date().toISOString(),
 };
 
