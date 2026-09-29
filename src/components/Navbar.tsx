@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Search,
   Menu as MenuIcon,
@@ -23,8 +23,9 @@ import { DynamicIcon } from './DynamicIcon';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { hospitalSettings, websiteUISettings } = useSettings();
-  const { user, patientProfile } = useAuth();
+  const { user, patientProfile, requirePatientAuth } = useAuth();
 
   // Dynamic menus loaded from MenuService / Database
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -388,13 +389,18 @@ export const Navbar: React.FC = () => {
             </button>
 
             {/* Book Appointment CTA */}
-            <Link
-              to="/appointment"
-              className="hidden sm:inline-flex items-center gap-1.5 xl:gap-2 btn-gold btn-shimmer text-white font-extrabold text-xs 2xl:text-sm px-2.5 py-2 xl:px-3.5 xl:py-2.5 rounded-xl shadow-md transition-all whitespace-nowrap shrink-0 border border-[#B0934C]"
+            <button
+              type="button"
+              onClick={() => {
+                if (requirePatientAuth('/appointment')) {
+                  navigate('/appointment');
+                }
+              }}
+              className="hidden sm:inline-flex items-center gap-1.5 xl:gap-2 btn-gold btn-shimmer text-white font-extrabold text-xs 2xl:text-sm px-2.5 py-2 xl:px-3.5 xl:py-2.5 rounded-xl shadow-md transition-all whitespace-nowrap shrink-0 border border-[#B0934C] cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5 xl:w-4 xl:h-4 shrink-0 text-white" />
               <span className="whitespace-nowrap">Book Appointment</span>
-            </Link>
+            </button>
 
             {/* Patient Account / Login Action */}
             {user ? (
@@ -644,14 +650,19 @@ export const Navbar: React.FC = () => {
 
                   {/* Primary CTA Buttons */}
                   <div className="space-y-2 pt-1">
-                    <Link
-                      to="/appointment"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="w-full flex items-center justify-center gap-2 bg-[#006655] hover:bg-[#004C3D] text-white font-extrabold py-3.5 rounded-2xl shadow-lg shadow-[#006655]/25 transition text-xs sm:text-sm"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        if (requirePatientAuth('/appointment')) {
+                          navigate('/appointment');
+                        }
+                      }}
+                      className="w-full flex items-center justify-center gap-2 bg-[#006655] hover:bg-[#004C3D] text-white font-extrabold py-3.5 rounded-2xl shadow-lg shadow-[#006655]/25 transition text-xs sm:text-sm cursor-pointer"
                     >
                       <Calendar className="w-4 h-4" />
                       <span>Book Doctor Appointment</span>
-                    </Link>
+                    </button>
 
                     {user ? (
                       <Link

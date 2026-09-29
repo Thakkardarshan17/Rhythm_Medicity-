@@ -5,6 +5,7 @@ import { Profile, PatientProfile, UserRole } from '../types/database';
 import { PatientAccountService } from '../services/patientAccountService';
 import { PatientSessionService } from '../services/patientSessionService';
 import { SessionTimeoutModal } from '../components/auth/SessionTimeoutModal';
+import { PatientAccountRequiredModal } from '../components/auth/PatientAccountRequiredModal';
 
 export interface PatientRegisterData {
   fullName: string;
@@ -26,12 +27,19 @@ interface AuthContextType {
   loading: boolean;
   sessionWarningOpen: boolean;
   sessionRemainingSeconds: number;
+  isPatientAuthModalOpen: boolean;
+  patientAuthModalRedirectUrl: string;
+  openPatientAuthModal: (redirectUrl?: string) => void;
+  closePatientAuthModal: () => void;
+  requirePatientAuth: (redirectUrl?: string) => boolean;
   continueSession: () => Promise<void>;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginPatient: (identifier: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: (redirectPath?: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, fullName: string) => Promise<{ success: boolean; error?: string }>;
   registerPatient: (data: PatientRegisterData) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   deleteAccount: (password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -48,6 +56,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [sessionWarningOpen, setSessionWarningOpen] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(120);
   const [renewingSession, setRenewingSession] = useState(false);
+  const [isPatientAuthModalOpen, setIsPatientAuthModalOpen] = useState(false);
+  const [patientAuthModalRedirectUrl, setPatientAuthModalRedirectUrl] = useState('/appointment');
+
+  const openPatientAuthModal = (redirectUrl?: string) => {
+    setPatientAuthModalRedirectUrl(redirectUrl || '/appointment');
+    setIsPatientAuthModalOpen(true);
+  };
+
+  const closePatientAuthModal = () => {
+    setIsPatientAuthModalOpen(false);
+  };
+
+  const requirePatientAuth = (redirectUrl: string = '/appointment'): boolean => {
+    if (user && (role === 'user' || role === 'patient')) {
+      return true;
+    }
+    openPatientAuthModal(redirectUrl);
+    return false;
+  };
 
   const fetchUserProfile = async (userId: string, userEmail?: string) => {
     if (!isSupabaseConfigured() || !isValidUUID(userId)) {
@@ -214,9 +241,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isEmailAdmin = Boolean(
           currentUser.email && (currentUser.email.toLowerCase().includes('admin') || currentUser.email.toLowerCase().includes('rhythmmedicity.internal'))
         );
-        if (isEmailAdmin || PatientSessionService.getActiveSession()) {
+        if (isEmailAdmin) {
           setUser(currentUser);
           await fetchUserProfile(currentUser.id, currentUser.email);
+        } else {
+          // If not already in an active session (e.g. Google OAuth redirect callback)
+          if (!PatientSessionService.getActiveSession()) {
+            await PatientSessionService.createSession(currentUser.id);
+          }
+          setUser(currentUser);
+          setRole('user');
+          await fetchUserProfile(currentUser.id, currentUser.email);
+
+          // Idempotent patient profile registration / sync
+          const patName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'Patient';
+          await PatientAccountService.recordPatientLogin(
+            currentUser.email || currentUser.id,
+            currentUser.id,
+            patName
+          );
         }
       } else {
         setUser(null);
@@ -231,6 +274,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  // Global Event listener for appointment authentication gate
+  useEffect(() => {
+    const handleAuthGateEvent = (e: any) => {
+      const redirectUrl = e.detail?.redirectUrl || '/appointment';
+      requirePatientAuth(redirectUrl);
+    };
+    window.addEventListener('rhythm_require_patient_auth', handleAuthGateEvent);
+    return () => window.removeEventListener('rhythm_require_patient_auth', handleAuthGateEvent);
+  }, [user, role]);
+
+  // Multi-tab session synchronization (instant cross-tab logout & invalidation)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'rhythm_active_sessions_vault' || e.key === 'rhythm_patient_active_session') {
+        const activeSession = PatientSessionService.getActiveSession();
+        if (!activeSession && user && role === 'user') {
+          logout();
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user, role]);
+
+  // Mandatory Patient Account Gate: Global Capture Interceptor
+  // Intercepts clicks on any Book Appointment links/buttons across the entire site for unauthenticated visitors
+  useEffect(() => {
+    const handleGlobalAppointmentClick = (e: MouseEvent) => {
+      // If user is already authenticated as a patient, allow normal navigation
+      if (user && (role === 'user' || role === 'patient')) {
+        return;
+      }
+
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const anchor = target.closest('a');
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+
+      // Match /appointment or /book-appointment routes (excluding post-booking verify/success)
+      if (
+        (href.startsWith('/appointment') ||
+          href.startsWith('/book-appointment') ||
+          href.includes('/appointment?') ||
+          href.includes('/book-appointment?')) &&
+        !href.includes('/appointment/verify') &&
+        !href.includes('/appointment/view') &&
+        !href.includes('/appointment/success')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        openPatientAuthModal(href);
+      }
+    };
+
+    // Capture phase intercepts before React Router Link
+    document.addEventListener('click', handleGlobalAppointmentClick, true);
+    return () => document.removeEventListener('click', handleGlobalAppointmentClick, true);
+  }, [user, role]);
 
   // Monitor legitimate patient activity & enforce server/OWASP inactivity + absolute timeouts
   useEffect(() => {
@@ -258,6 +364,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!status.valid) {
         setSessionWarningOpen(false);
         await logout();
+        if (window.location.pathname.startsWith('/dashboard') || window.location.pathname.startsWith('/user') || window.location.pathname.startsWith('/appointment')) {
+          window.location.href = '/login?reason=session_expired';
+        }
         return;
       }
       setRemainingSeconds(status.remainingSeconds);
@@ -761,6 +870,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Google OAuth flow for Patient Portal
+  const signInWithGoogle = async (redirectPath: string = '/dashboard'): Promise<{ success: boolean; error?: string }> => {
+    if (!isSupabaseConfigured()) {
+      return {
+        success: false,
+        error: 'Google Sign-In requires active Supabase authentication configuration. Please verify credentials in your environment.',
+      };
+    }
+
+    try {
+      const redirectUri = `${window.location.origin}/login?redirect=${encodeURIComponent(redirectPath)}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUri,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to initiate Google authentication.' };
+    }
+  };
+
+  // Update password for recovery / reset flow
+  const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters long.' };
+    }
+
+    if (!isSupabaseConfigured()) {
+      return { success: true };
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to update password.' };
+    }
+  };
+
   const deleteAccount = async (password: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) {
       return { success: false, error: 'No active session found.' };
@@ -840,12 +1002,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         sessionWarningOpen,
         sessionRemainingSeconds: remainingSeconds,
+        isPatientAuthModalOpen,
+        patientAuthModalRedirectUrl,
+        openPatientAuthModal,
+        closePatientAuthModal,
+        requirePatientAuth,
         continueSession,
         login,
         loginPatient,
+        signInWithGoogle,
         register,
         registerPatient,
         resetPassword,
+        updatePassword,
         deleteAccount,
         logout,
         refreshProfile,
@@ -858,6 +1027,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         onContinue={continueSession}
         onLogout={logout}
         renewing={renewingSession}
+      />
+      <PatientAccountRequiredModal
+        isOpen={isPatientAuthModalOpen}
+        onClose={closePatientAuthModal}
+        redirectUrl={patientAuthModalRedirectUrl}
       />
     </AuthContext.Provider>
   );

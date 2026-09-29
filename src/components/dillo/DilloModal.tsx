@@ -48,7 +48,7 @@ export const DilloModal: React.FC<DilloModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { dilloSettings, hospitalSettings, hospitalStats } = useSettings();
-  const { user } = useAuth();
+  const { user, requirePatientAuth } = useAuth();
 
   const DILLO_SESSION_INTRO_KEY = 'rhythm_dillo_session_intro_spoken';
   const DILLO_USER_LANG_KEY = 'rhythm_dillo_user_language';
@@ -944,9 +944,11 @@ export const DilloModal: React.FC<DilloModalProps> = ({
                             type="button"
                             onClick={() => {
                               onClose();
-                              navigate(`/book-appointment?doctorId=${doc.id}`);
+                              if (requirePatientAuth(`/book-appointment?doctorId=${doc.id}`)) {
+                                navigate(`/book-appointment?doctorId=${doc.id}`);
+                              }
                             }}
-                            className="shrink-0 px-3 py-1.5 rounded-lg bg-[#006655] hover:bg-[#004C3D] text-white text-[11px] font-bold shadow-xs transition flex items-center gap-1"
+                            className="shrink-0 px-3 py-1.5 rounded-lg bg-[#006655] hover:bg-[#004C3D] text-white text-[11px] font-bold shadow-xs transition flex items-center gap-1 cursor-pointer"
                           >
                             <span>
                               {currentLang === 'hi-IN' ? 'बुक करें' :

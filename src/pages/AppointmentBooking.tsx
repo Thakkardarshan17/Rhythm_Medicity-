@@ -378,59 +378,55 @@ export const AppointmentBooking: React.FC = () => {
     const selectedSpecObj = specialities.find((s) => s.id === (preSelectedSpec || selectedSpecialityId));
 
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="bg-white rounded-3xl border border-[#E5DEC9] shadow-xl p-8 sm:p-12 text-center space-y-8 animate-in fade-in zoom-in-95 duration-300">
-          {/* Lock Icon */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="bg-white rounded-3xl border border-[#E5DEC9] shadow-xl p-6 sm:p-10 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+          {/* Top Brand Stripe */}
+          <div className="h-1.5 w-24 mx-auto rounded-full bg-gradient-to-r from-[#006655] via-[#C4A760] to-[#004C3D]" />
+
+          {/* Hospital Lock Emblem */}
           <div className="w-20 h-20 rounded-3xl bg-[#E0F2ED] text-[#006655] flex items-center justify-center mx-auto shadow-inner border border-[#006655]/20">
             <Lock className="w-10 h-10 text-[#006655]" />
           </div>
 
-          {/* Dedicated Heading & Message */}
-          <div className="flex flex-col items-center gap-3.5 max-w-xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E0F2ED] text-[#006655] border border-[#006655]/20 text-[11px] sm:text-xs font-black tracking-wider uppercase shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-[#006655]" />
-              <span>Patient Authentication Required</span>
+          {/* Heading & Exact Required Instructions */}
+          <div className="flex flex-col items-center gap-3 max-w-lg mx-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#E0F2ED] text-[#006655] border border-[#006655]/20 text-[11px] font-black tracking-wider uppercase">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#006655]" />
+              <span>Patient Account Required</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#004C3D] tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#004C3D] tracking-tight leading-tight">
               Patient Account Required to Book Appointment
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed max-w-md">
-              Please create a patient account or log in to continue with appointment booking.
+            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+              To book an appointment at Rhythm Medicity, you must first create your own patient account or log in to your existing account. Your account helps you manage your appointments, patient profile, payment history, and appointment letters securely.
             </p>
           </div>
 
-
-          {/* Action Buttons: Login and Create Patient Account */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-lg mx-auto pt-2 w-full">
-            <Link
-              to={`/login?redirect=${encodeURIComponent(returnUrl)}`}
-              className="w-full sm:flex-1 h-12 flex items-center justify-center gap-2 px-6 rounded-2xl bg-[#006655] hover:bg-[#004C3D] text-white font-extrabold text-sm shadow-md shadow-[#006655]/20 transition-all hover:scale-[1.02] cursor-pointer whitespace-nowrap"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Login</span>
-            </Link>
-
+          {/* Exactly TWO Primary Action Buttons */}
+          <div className="flex flex-col gap-3 max-w-sm mx-auto pt-2 w-full">
+            {/* BUTTON 1: Create a New Account */}
             <Link
               to={`/login?mode=register&redirect=${encodeURIComponent(returnUrl)}`}
-              className="w-full sm:flex-1 h-12 flex items-center justify-center gap-2 px-6 rounded-2xl bg-white hover:bg-[#E0F2ED] text-[#004C3D] hover:text-[#006655] font-extrabold text-sm border-2 border-[#006655]/40 transition-all hover:scale-[1.02] shadow-2xs cursor-pointer whitespace-nowrap"
+              className="w-full h-12 flex items-center justify-center gap-2.5 px-6 rounded-2xl bg-[#006655] hover:bg-[#004C3D] text-white font-black text-sm shadow-md shadow-[#006655]/20 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
-              <UserPlus className="w-4 h-4 text-[#006655]" />
-              <span>Create Patient Account</span>
+              <UserPlus className="w-4 h-4 text-white" />
+              <span>Create a New Account</span>
+            </Link>
+
+            {/* BUTTON 2: Already Have an Account? Login */}
+            <Link
+              to={`/login?mode=login&redirect=${encodeURIComponent(returnUrl)}`}
+              className="w-full h-12 flex items-center justify-center gap-2.5 px-6 rounded-2xl bg-white hover:bg-[#E0F2ED] text-[#004C3D] hover:text-[#006655] font-black text-sm border-2 border-[#006655]/30 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-2xs cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 text-[#006655]" />
+              <span>Already Have an Account? Login</span>
             </Link>
           </div>
 
-          {/* Security & Benefits Guarantee */}
-          <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#006655]" /> Secure Patient Portal
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-[#006655]" /> Instant Official A5 Slips
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-[#006655]" /> Realtime Status Tracking
-            </span>
-          </div>
+          {/* Optional Small Text */}
+          <p className="text-[11px] sm:text-xs text-slate-500 font-medium pt-1">
+            Your health journey, managed securely with Rhythm Medicity.
+          </p>
         </div>
       </div>
     );
