@@ -17,7 +17,7 @@ export const DEFAULT_BANNER_CAROUSEL_SETTINGS: BannerCarouselSettings = {
   updated_at: new Date().toISOString(),
 };
 
-function getLocalBanners(): Banner[] {
+function getCachedBanners(): Banner[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -26,9 +26,15 @@ function getLocalBanners(): Banner[] {
   }
 }
 
-function saveLocalBanners(list: Banner[]): void {
+function saveCachedBanners(list: Banner[]): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+  } catch (_) {}
+}
+
+function notifyBannersChanged(): void {
+  try {
+    window.dispatchEvent(new CustomEvent('rhythm_banners_changed'));
   } catch (_) {}
 }
 
@@ -64,6 +70,7 @@ export class BannerService {
       localStorage.setItem(SETTINGS_LOCAL_STORAGE_KEY, JSON.stringify(updated));
     } catch (_) {}
 
+    notifyBannersChanged();
     return updated;
   }
 
@@ -81,7 +88,7 @@ export class BannerService {
           .order('created_at', { ascending: false });
 
         if (!error && data) {
-          saveLocalBanners(data);
+          saveCachedBanners(data);
           return data;
         }
       } catch (err) {
@@ -89,8 +96,10 @@ export class BannerService {
       }
     }
 
-    const localList = getLocalBanners().filter((b) => b.status === 'active');
-    return localList.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const cached = getCachedBanners();
+    return cached
+      .filter((b) => b.status === 'active')
+      .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
   }
 
   /**
@@ -106,16 +115,19 @@ export class BannerService {
           .order('created_at', { ascending: false });
 
         if (!error && data) {
-          saveLocalBanners(data);
+          saveCachedBanners(data);
           return data;
+        }
+        if (error) {
+          console.warn('Error fetching admin banners from Supabase:', error);
         }
       } catch (err) {
         console.warn('Error fetching admin banners from Supabase:', err);
       }
     }
 
-    const localList = getLocalBanners();
-    return localList.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const cached = getCachedBanners();
+    return cached.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
   }
 
   /**
@@ -139,22 +151,29 @@ export class BannerService {
       try {
         const { data, error } = await supabase
           .from('banners')
-          .insert({ ...newRecord })
+          .insert(newRecord)
           .select()
           .single();
 
-        if (!error && data) {
-          const locals = getLocalBanners().filter((b) => b.id !== data.id);
-          saveLocalBanners([data, ...locals]);
+        if (error) {
+          throw new Error(error.message || 'Database insert failed');
+        }
+
+        if (data) {
+          const cached = getCachedBanners();
+          saveCachedBanners([data, ...cached.filter((b) => b.id !== data.id)]);
+          notifyBannersChanged();
           return data;
         }
-      } catch (err) {
-        console.warn('Supabase banner create error, saving locally:', err);
+      } catch (err: any) {
+        console.error('Supabase banner create failed:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalBanners().filter((b) => b.id !== newRecord.id);
-    saveLocalBanners([newRecord, ...locals]);
+    const cached = getCachedBanners();
+    saveCachedBanners([newRecord, ...cached.filter((b) => b.id !== newRecord.id)]);
+    notifyBannersChanged();
     return newRecord;
   }
 
@@ -162,8 +181,6 @@ export class BannerService {
    * Update existing Banner
    */
   static async updateBanner(id: string, bannerData: Partial<Banner>): Promise<Banner> {
-    let updatedRecord: Banner | null = null;
-
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
         const { data, error } = await supabase
@@ -171,39 +188,52 @@ export class BannerService {
           .update({
             ...bannerData,
             display_order:
-              bannerData.display_order !== undefined ? Number(bannerData.display_order) : undefined,
+              bannerData.display_order !== undefined
+                ? Number(bannerData.display_order)
+                : undefined,
             updated_at: new Date().toISOString(),
           })
           .eq('id', id)
           .select()
           .single();
 
-        if (!error && data) {
-          updatedRecord = data;
+        if (error) {
+          throw new Error(error.message || 'Database update failed');
         }
-      } catch (err) {
-        console.warn('Supabase banner update error, saving locally:', err);
+
+        if (data) {
+          const cached = getCachedBanners();
+          saveCachedBanners([data, ...cached.filter((b) => b.id !== id)]);
+          notifyBannersChanged();
+          return data;
+        }
+      } catch (err: any) {
+        console.error('Supabase banner update error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalBanners();
-    const existing = locals.find((b) => b.id === id);
+    const cached = getCachedBanners();
+    const existing = cached.find((b) => b.id === id);
     const merged: Banner = {
       id,
       title: bannerData.title ?? existing?.title ?? '',
-      subtitle: bannerData.subtitle !== undefined ? bannerData.subtitle : (existing?.subtitle || null),
+      subtitle: bannerData.subtitle !== undefined ? bannerData.subtitle : existing?.subtitle || null,
       image_url: bannerData.image_url ?? existing?.image_url ?? '',
-      cta_link: bannerData.cta_link !== undefined ? bannerData.cta_link : (existing?.cta_link || null),
-      cta_text: bannerData.cta_text !== undefined ? bannerData.cta_text : (existing?.cta_text || null),
+      cta_link: bannerData.cta_link !== undefined ? bannerData.cta_link : existing?.cta_link || null,
+      cta_text: bannerData.cta_text !== undefined ? bannerData.cta_text : existing?.cta_text || null,
       status: bannerData.status ?? existing?.status ?? 'active',
-      display_order: bannerData.display_order !== undefined ? Number(bannerData.display_order) : (existing?.display_order || 0),
+      display_order:
+        bannerData.display_order !== undefined
+          ? Number(bannerData.display_order)
+          : existing?.display_order || 0,
       created_at: existing?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      ...(updatedRecord || {}),
     };
 
-    saveLocalBanners([merged, ...locals.filter((b) => b.id !== id)]);
-    return updatedRecord || merged;
+    saveCachedBanners([merged, ...cached.filter((b) => b.id !== id)]);
+    notifyBannersChanged();
+    return merged;
   }
 
   /**
@@ -212,14 +242,19 @@ export class BannerService {
   static async deleteBanner(id: string): Promise<void> {
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
-        await supabase.from('banners').delete().eq('id', id);
-      } catch (err) {
-        console.warn('Supabase banner delete error:', err);
+        const { error } = await supabase.from('banners').delete().eq('id', id);
+        if (error) {
+          throw new Error(error.message || 'Database delete failed');
+        }
+      } catch (err: any) {
+        console.error('Supabase banner delete error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalBanners();
-    saveLocalBanners(locals.filter((b) => b.id !== id));
+    const cached = getCachedBanners();
+    saveCachedBanners(cached.filter((b) => b.id !== id));
+    notifyBannersChanged();
   }
 
   /**
@@ -233,4 +268,3 @@ export class BannerService {
     return uploadImageWithFallback('hospital-public-assets', filePath, file);
   }
 }
-

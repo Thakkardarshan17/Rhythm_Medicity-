@@ -31,6 +31,7 @@ import { EmptyState } from '../components/EmptyState';
 import { formatCurrency } from '../utils/formatters';
 import { AnimatedCounter } from '../components/AnimatedCounter';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
 
 export const Home: React.FC = () => {
   const { hospitalSettings, hospitalStats, websiteUISettings } = useSettings();
@@ -80,28 +81,33 @@ export const Home: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const loadHomeData = async () => {
-      try {
-        const [bannersData, settingsData, specsData, docsData] = await Promise.all([
-          BannerService.getActiveBanners(),
-          BannerService.getBannerSettings(),
-          SpecialityService.getActiveSpecialities(),
-          DoctorService.getActiveDoctors(),
-        ]);
-        setBanners(bannersData);
-        setBannerSettings(settingsData);
-        setSpecialities(specsData);
-        setDoctors(docsData);
-      } catch (err) {
-        console.error('Error loading home data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadHomeData = async () => {
+    try {
+      const [bannersData, settingsData, specsData, docsData] = await Promise.all([
+        BannerService.getActiveBanners(),
+        BannerService.getBannerSettings(),
+        SpecialityService.getActiveSpecialities(),
+        DoctorService.getActiveDoctors(),
+      ]);
+      setBanners(bannersData);
+      setBannerSettings(settingsData);
+      setSpecialities(specsData);
+      setDoctors(docsData);
+    } catch (err) {
+      console.error('Error loading home data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadHomeData();
   }, []);
+
+  // Real-time synchronization: reflect admin modifications automatically without page reload
+  useRealtimeSync({ table: 'banners', onUpdate: loadHomeData });
+  useRealtimeSync({ table: 'doctors', onUpdate: loadHomeData });
+  useRealtimeSync({ table: 'specialities', onUpdate: loadHomeData });
 
   // Admin-Controlled Hero Carousel Auto-Timer with dynamic interval & pause on hover
   useEffect(() => {

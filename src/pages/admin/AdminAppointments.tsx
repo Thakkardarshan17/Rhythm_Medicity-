@@ -13,6 +13,7 @@ import {
   Stethoscope,
   X,
   User,
+  Trash2,
 } from 'lucide-react';
 import { AppointmentService, AppointmentFilterParams } from '../../services/appointmentService';
 import { DoctorService } from '../../services/doctorService';
@@ -55,9 +56,12 @@ export const AdminAppointments: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [diagnosisText, setDiagnosisText] = useState('');
   const [savingDiagnosis, setSavingDiagnosis] = useState(false);
+  const [deletingDiagnosis, setDeletingDiagnosis] = useState(false);
 
-  // Cancel dialog state
+  // Cancel / Delete dialog state
   const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
+  const [isDeletingApt, setIsDeletingApt] = useState(false);
 
   const loadData = async () => {
     try {
@@ -78,6 +82,15 @@ export const AdminAppointments: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+
+    window.addEventListener('rhythm_appointments_changed', handleSync);
+    return () => {
+      window.removeEventListener('rhythm_appointments_changed', handleSync);
+    };
   }, [filters]);
 
   const handleStatusChange = async (aptId: string, newStatus: AppointmentStatus) => {
@@ -117,6 +130,23 @@ export const AdminAppointments: React.FC = () => {
     }
   };
 
+  const handleDeleteDiagnosisNote = async () => {
+    if (!selectedAppointment) return;
+    setDeletingDiagnosis(true);
+    try {
+      await AppointmentService.updateDiagnosisNote(selectedAppointment.id, '');
+      await AuditService.logAction('DIAGNOSIS_REMOVED', 'APPOINTMENT', selectedAppointment.id);
+      showToast('Doctor clinical note deleted successfully.', 'info');
+      setDiagnosisText('');
+      setDiagnosisModalOpen(false);
+      await loadData();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete note', 'error');
+    } finally {
+      setDeletingDiagnosis(false);
+    }
+  };
+
   const handleCancelAppointment = async () => {
     if (!cancelTarget) return;
     try {
@@ -127,6 +157,24 @@ export const AdminAppointments: React.FC = () => {
       await loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to cancel appointment', 'error');
+    }
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!deleteTarget) return;
+    setIsDeletingApt(true);
+    try {
+      await AppointmentService.deleteAppointment(deleteTarget.id);
+      await AuditService.logAction('DELETE_APPOINTMENT', 'appointment', deleteTarget.id, {
+        appointment_number: deleteTarget.appointment_number,
+      });
+      showToast('Appointment record permanently deleted from database.', 'info');
+      setDeleteTarget(null);
+      await loadData();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete appointment', 'error');
+    } finally {
+      setIsDeletingApt(false);
     }
   };
 
@@ -336,12 +384,21 @@ export const AdminAppointments: React.FC = () => {
                       {apt.appointment_status !== 'CANCELLED' && (
                         <button
                           onClick={() => setCancelTarget(apt)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition"
                           title="Cancel Appointment"
                         >
                           <XCircle className="w-4 h-4" />
                         </button>
                       )}
+
+                      {/* Delete Appointment Permanently */}
+                      <button
+                        onClick={() => setDeleteTarget(apt)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                        title="Delete Appointment from Database"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -434,22 +491,41 @@ export const AdminAppointments: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setDiagnosisModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingDiagnosis}
-                  className="px-5 py-2 rounded-xl bg-[#006655] text-white font-bold shadow-md flex items-center gap-1.5"
-                >
-                  {savingDiagnosis && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Clinical Note</span>
-                </button>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                {selectedAppointment?.diagnosis ? (
+                  <button
+                    type="button"
+                    onClick={handleDeleteDiagnosisNote}
+                    disabled={deletingDiagnosis || savingDiagnosis}
+                    className="px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {deletingDiagnosis ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>Delete Note</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDiagnosisModalOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingDiagnosis || deletingDiagnosis}
+                    className="px-5 py-2 rounded-xl bg-[#006655] text-white font-bold shadow-md flex items-center gap-1.5"
+                  >
+                    {savingDiagnosis && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Save Clinical Note</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -465,6 +541,18 @@ export const AdminAppointments: React.FC = () => {
         isDestructive={true}
         onConfirm={handleCancelAppointment}
         onCancel={() => setCancelTarget(null)}
+      />
+
+      {/* Delete Appointment Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Delete Appointment Record?"
+        message={`Are you sure you want to permanently delete appointment #${deleteTarget?.appointment_number} for ${deleteTarget?.patient_name} from the database? This cannot be undone.`}
+        confirmText="Delete Record"
+        isDestructive={true}
+        isLoading={isDeletingApt}
+        onConfirm={handleDeleteAppointment}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

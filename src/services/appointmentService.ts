@@ -2,7 +2,6 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidUUID, sanitizeUUID, generateUUID } from '../utils/uuid';
 import { Appointment, AppointmentStatus, PaymentStatus } from '../types/database';
 import { DoctorService } from './doctorService';
-import { SpecialityService } from './specialityService';
 import { AuditService } from './auditService';
 
 export interface AppointmentFilterParams {
@@ -18,7 +17,7 @@ export interface AppointmentFilterParams {
 
 const LOCAL_APPOINTMENTS_KEY = 'rhythm_local_appointments';
 
-function getLocalAppointments(): Appointment[] {
+function getCachedAppointments(): Appointment[] {
   try {
     const raw = localStorage.getItem(LOCAL_APPOINTMENTS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -27,9 +26,15 @@ function getLocalAppointments(): Appointment[] {
   }
 }
 
-function saveLocalAppointments(list: Appointment[]): void {
+function saveCachedAppointments(list: Appointment[]): void {
   try {
     localStorage.setItem(LOCAL_APPOINTMENTS_KEY, JSON.stringify(list));
+  } catch (_) {}
+}
+
+function notifyAppointmentsChanged(): void {
+  try {
+    window.dispatchEvent(new CustomEvent('rhythm_appointments_changed'));
   } catch (_) {}
 }
 
@@ -39,37 +44,31 @@ export class AppointmentService {
    */
   static generateAppointmentNumber(): string {
     const year = new Date().getFullYear();
-    const existing = getLocalAppointments();
+    const existing = getCachedAppointments();
     const seq = existing.length + 125;
     const padded = String(seq).padStart(6, '0');
     return `RM-${year}-${padded}`;
   }
 
   static async getAppointmentById(id: string): Promise<Appointment | null> {
-    // 1. Check local storage first for immediate offline/hybrid speed
-    const local = getLocalAppointments().find((a) => a.id === id || a.appointment_number === id);
-    if (local) {
-      return local;
-    }
+    if (isSupabaseConfigured() && isValidUUID(id)) {
+      try {
+        const { data, error } = await supabase
+          .from('appointments')
+          .select('*, doctor:doctors(*), speciality:specialities(*)')
+          .eq('id', id)
+          .maybeSingle();
 
-    if (!isSupabaseConfigured() || !isValidUUID(id)) {
-      return null;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*, doctor:doctors(*), speciality:specialities(*)')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (!error && data) {
-        return data;
+        if (!error && data) {
+          return data;
+        }
+      } catch (err) {
+        console.warn('Error fetching appointment from Supabase:', err);
       }
-    } catch (err) {
-      console.warn('Error fetching appointment from Supabase:', err);
     }
-    return null;
+
+    const cached = getCachedAppointments();
+    return cached.find((a) => a.id === id || a.appointment_number === id) || null;
   }
 
   static async getUserAppointments(
@@ -77,7 +76,6 @@ export class AppointmentService {
     patientMobile?: string | null,
     patientEmail?: string | null
   ): Promise<Appointment[]> {
-    let remote: Appointment[] = [];
     const validUserId = isValidUUID(userId) ? userId : null;
     const cleanMobile = patientMobile ? patientMobile.replace(/\D/g, '') : null;
     const cleanEmail = patientEmail ? patientEmail.trim().toLowerCase() : null;
@@ -100,14 +98,15 @@ export class AppointmentService {
 
         const { data, error } = await query;
         if (!error && data) {
-          remote = data;
+          saveCachedAppointments(data);
+          return data;
         }
       } catch (err) {
         console.warn('Error fetching user appointments from Supabase:', err);
       }
     }
 
-    const localList = getLocalAppointments().filter((a) => {
+    const cached = getCachedAppointments().filter((a) => {
       if (userId && a.patient_user_id === userId) return true;
       if (validUserId && a.patient_user_id === validUserId) return true;
       if (cleanMobile && a.patient_mobile && a.patient_mobile.replace(/\D/g, '') === cleanMobile) return true;
@@ -115,22 +114,14 @@ export class AppointmentService {
       return false;
     });
 
-    const map = new Map<string, Appointment>();
-
-    for (const item of remote) {
-      map.set(item.id, item);
-    }
-    for (const item of localList) {
-      map.set(item.id, item);
-    }
-
-    return Array.from(map.values()).sort(
-      (a, b) => new Date(b.appointment_date + 'T' + b.appointment_time).getTime() - new Date(a.appointment_date + 'T' + a.appointment_time).getTime()
+    return cached.sort(
+      (a, b) =>
+        new Date(b.appointment_date + 'T' + b.appointment_time).getTime() -
+        new Date(a.appointment_date + 'T' + a.appointment_time).getTime()
     );
   }
 
   static async getAllAppointmentsAdmin(filters: AppointmentFilterParams = {}): Promise<Appointment[]> {
-    let remote: Appointment[] = [];
     if (isSupabaseConfigured()) {
       try {
         let query = supabase
@@ -168,26 +159,18 @@ export class AppointmentService {
 
         const { data, error } = await query;
         if (!error && data) {
-          remote = data;
+          saveCachedAppointments(data);
+          return data;
+        }
+        if (error) {
+          console.warn('Error fetching admin appointments from Supabase:', error);
         }
       } catch (err) {
         console.warn('Error fetching admin appointments from Supabase:', err);
       }
     }
 
-    const localList = getLocalAppointments();
-    const map = new Map<string, Appointment>();
-
-    for (const item of remote) {
-      map.set(item.id, item);
-    }
-    for (const item of localList) {
-      map.set(item.id, item);
-    }
-
-    let all = Array.from(map.values());
-
-    // Apply local filters if needed
+    let all = getCachedAppointments();
     if (filters.status && filters.status !== 'all') {
       all = all.filter((a) => a.appointment_status === filters.status);
     }
@@ -213,7 +196,9 @@ export class AppointmentService {
     }
 
     return all.sort(
-      (a, b) => new Date(b.created_at || b.appointment_date).getTime() - new Date(a.created_at || a.appointment_date).getTime()
+      (a, b) =>
+        new Date(b.created_at || b.appointment_date).getTime() -
+        new Date(a.created_at || a.appointment_date).getTime()
     );
   }
 
@@ -257,8 +242,8 @@ export class AppointmentService {
       patient_gender: params.patientGender,
       patient_address: params.patientAddress,
       patient_mobile: params.patientMobile,
-      speciality_id: sanitizeUUID(params.specialityId) || 'a1b2c3d4-0001-4000-8000-000000000001',
-      doctor_id: sanitizeUUID(params.doctorId) || 'd1e2f3a4-0001-4000-8000-000000000001',
+      speciality_id: sanitizeUUID(params.specialityId) || '054143b9-eb79-49d0-a74c-0e12c20a6c2d',
+      doctor_id: sanitizeUUID(params.doctorId) || '7637bd26-293d-4705-b162-74fce2197ec0',
       appointment_date: params.appointmentDate,
       appointment_time: params.appointmentTime,
       patient_problem: params.patientProblem,
@@ -286,11 +271,7 @@ export class AppointmentService {
       doctor: doctor || undefined,
     };
 
-    // Save to local storage cache immediately
-    const locals = getLocalAppointments();
-    saveLocalAppointments([appointmentRecord, ...locals.filter((a) => a.id !== appointmentId)]);
-
-    // Save to Supabase if configured
+    // Save to Supabase
     if (isSupabaseConfigured()) {
       try {
         const payload: any = {
@@ -299,10 +280,17 @@ export class AppointmentService {
           doctor: undefined,
           speciality: undefined,
         };
-        const { data, error } = await supabase.from('appointments').insert(payload).select().single();
+        const { data, error } = await supabase
+          .from('appointments')
+          .insert(payload)
+          .select()
+          .single();
+
         if (error) {
-          console.warn('Supabase insert appointment error, fallback to local:', error);
-        } else if (data) {
+          throw new Error(error.message || 'Database insert failed');
+        }
+
+        if (data) {
           appointmentRecord.id = data.id || appointmentRecord.id;
         }
 
@@ -319,12 +307,15 @@ export class AppointmentService {
             created_at: now,
           });
         } catch (_) {}
-      } catch (err) {
-        console.warn('Supabase appointment threw:', err);
+      } catch (err: any) {
+        console.error('Supabase appointment create failed:', err);
+        throw err;
       }
     }
 
-    // Log admin audit entry
+    const cached = getCachedAppointments();
+    saveCachedAppointments([appointmentRecord, ...cached.filter((a) => a.id !== appointmentId)]);
+
     await AuditService.logAction(
       'CREATE_APPOINTMENT',
       'appointment',
@@ -339,72 +330,117 @@ export class AppointmentService {
       }
     );
 
+    notifyAppointmentsChanged();
     return appointmentRecord;
   }
 
   static async updateAppointmentStatus(id: string, status: AppointmentStatus): Promise<Appointment> {
-    const locals = getLocalAppointments();
-    const existing = locals.find((a) => a.id === id);
-
-    if (existing) {
-      existing.appointment_status = status;
-      existing.updated_at = new Date().toISOString();
-      saveLocalAppointments([...locals.filter((a) => a.id !== id), existing]);
-    }
-
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
-        await supabase
+        const { data, error } = await supabase
           .from('appointments')
           .update({
             appointment_status: status,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', id);
-      } catch (err) {
-        console.warn('Supabase update appointment status error:', err);
+          .eq('id', id)
+          .select('*, doctor:doctors(*), speciality:specialities(*)')
+          .single();
+
+        if (error) {
+          throw new Error(error.message || 'Database status update failed');
+        }
+
+        if (data) {
+          const cached = getCachedAppointments();
+          saveCachedAppointments([data, ...cached.filter((a) => a.id !== id)]);
+          notifyAppointmentsChanged();
+          return data;
+        }
+      } catch (err: any) {
+        console.error('Supabase update appointment status error:', err);
+        throw err;
       }
     }
 
-    await AuditService.logAction(
-      'UPDATE_STATUS',
-      'appointment',
-      id,
-      { status, appointment_number: existing?.appointment_number }
-    );
+    const cached = getCachedAppointments();
+    const existing = cached.find((a) => a.id === id);
+    if (existing) {
+      existing.appointment_status = status;
+      existing.updated_at = new Date().toISOString();
+      saveCachedAppointments([...cached.filter((a) => a.id !== id), existing]);
+    }
 
+    notifyAppointmentsChanged();
     return existing || ({} as Appointment);
   }
 
   static async updateDiagnosisNote(id: string, diagnosis: string): Promise<Appointment> {
-    const locals = getLocalAppointments();
-    const existing = locals.find((a) => a.id === id);
-
-    if (existing) {
-      existing.diagnosis = diagnosis;
-      existing.updated_at = new Date().toISOString();
-      saveLocalAppointments([...locals.filter((a) => a.id !== id), existing]);
-    }
-
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
-        await supabase
+        const { data, error } = await supabase
           .from('appointments')
           .update({
             diagnosis,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', id);
-      } catch (err) {
-        console.warn('Supabase update diagnosis error:', err);
+          .eq('id', id)
+          .select('*, doctor:doctors(*), speciality:specialities(*)')
+          .single();
+
+        if (error) {
+          throw new Error(error.message || 'Database clinical note update failed');
+        }
+
+        if (data) {
+          const cached = getCachedAppointments();
+          saveCachedAppointments([data, ...cached.filter((a) => a.id !== id)]);
+          notifyAppointmentsChanged();
+          return data;
+        }
+      } catch (err: any) {
+        console.error('Supabase update diagnosis error:', err);
+        throw err;
       }
     }
 
+    const cached = getCachedAppointments();
+    const existing = cached.find((a) => a.id === id);
+    if (existing) {
+      existing.diagnosis = diagnosis;
+      existing.updated_at = new Date().toISOString();
+      saveCachedAppointments([...cached.filter((a) => a.id !== id), existing]);
+    }
+
+    notifyAppointmentsChanged();
     return existing || ({} as Appointment);
+  }
+
+  static async deleteAppointment(id: string): Promise<void> {
+    if (isSupabaseConfigured() && isValidUUID(id)) {
+      try {
+        // Delete any related payment transactions first
+        await supabase
+          .from('payment_transactions')
+          .delete()
+          .eq('appointment_id', id);
+
+        const { error } = await supabase.from('appointments').delete().eq('id', id);
+        if (error) {
+          throw new Error(error.message || 'Database appointment delete failed');
+        }
+      } catch (err: any) {
+        console.error('Supabase appointment delete error:', err);
+        throw err;
+      }
+    }
+
+    const cached = getCachedAppointments();
+    saveCachedAppointments(cached.filter((a) => a.id !== id));
+    notifyAppointmentsChanged();
   }
 
   static async cancelAppointment(id: string): Promise<Appointment> {
     return this.updateAppointmentStatus(id, 'CANCELLED');
   }
 }
-

@@ -8,6 +8,7 @@ import { CardSkeleton } from '../components/LoadingSkeleton';
 import { EmptyState } from '../components/EmptyState';
 import { formatCurrency } from '../utils/formatters';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
 
 export const Doctors: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,25 +24,29 @@ export const Doctors: React.FC = () => {
     setSelectedSpeciality(specialityParam);
   }, [specialityParam]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [docs, specs] = await Promise.all([
-          DoctorService.getActiveDoctors(selectedSpeciality || undefined),
-          SpecialityService.getActiveSpecialities(),
-        ]);
-        setDoctors(docs);
-        setSpecialities(specs);
-      } catch (err) {
-        console.error('Error fetching doctors directory:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const [docs, specs] = await Promise.all([
+        DoctorService.getActiveDoctors(selectedSpeciality || undefined),
+        SpecialityService.getActiveSpecialities(),
+      ]);
+      setDoctors(docs);
+      setSpecialities(specs);
+    } catch (err) {
+      console.error('Error fetching doctors directory:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    setLoading(true);
     fetchData();
   }, [selectedSpeciality]);
+
+  // Sync real-time updates when admin adds/edits/deletes doctors or specialities
+  useRealtimeSync({ table: 'doctors', onUpdate: fetchData });
+  useRealtimeSync({ table: 'specialities', onUpdate: fetchData });
 
   const handleSpecialityChange = (specId: string) => {
     setSelectedSpeciality(specId);

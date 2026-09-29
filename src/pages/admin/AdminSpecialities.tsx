@@ -16,6 +16,7 @@ export const AdminSpecialities: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSpeciality, setEditingSpeciality] = useState<Speciality | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Speciality | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Speciality>>({
@@ -39,6 +40,15 @@ export const AdminSpecialities: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+
+    window.addEventListener('rhythm_specialities_changed', handleSync);
+    return () => {
+      window.removeEventListener('rhythm_specialities_changed', handleSync);
+    };
   }, []);
 
   const openAddModal = () => {
@@ -98,16 +108,19 @@ export const AdminSpecialities: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
       await SpecialityService.deleteSpeciality(deleteTarget.id);
       await AuditService.logAction('DELETE', 'SPECIALITY', deleteTarget.id, {
         name: deleteTarget.name,
       });
-      showToast('Speciality removed.', 'info');
+      showToast('Speciality removed permanently from database.', 'info');
       setDeleteTarget(null);
       await loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete speciality', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -314,6 +327,7 @@ export const AdminSpecialities: React.FC = () => {
         message={`Are you sure you want to delete ${deleteTarget?.name}? Doctors attached to this speciality may be affected.`}
         confirmText="Delete Speciality"
         isDestructive={true}
+        isLoading={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

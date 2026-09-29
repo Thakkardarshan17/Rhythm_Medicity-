@@ -56,121 +56,26 @@ export const DEFAULT_DOCTORS: Doctor[] = [
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
   },
-  {
-    id: 'd1e2f3a4-0003-4000-8000-000000000003',
-    full_name: 'Dr. Amit Verma',
-    slug: 'dr-amit-verma',
-    photo_url: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400',
-    speciality_id: 'a1b2c3d4-0003-4000-8000-000000000003',
-    qualification: 'MBBS, MD (Pediatrics), DCH, FIAP',
-    experience_years: 12,
-    consultation_fee: 600,
-    bio: 'Compassionate pediatrician focusing on newborn and infant care, pediatric developmental milestones, vaccination schedules, and acute childhood illnesses.',
-    phone: '+91 98250 34567',
-    email: 'dr.amit@rhythmmedicity.com',
-    availability_status: 'available',
-    status: 'active',
-    registration_number: 'G-18920',
-    languages: ['English', 'Hindi', 'Gujarati'],
-    clinic_room: 'OPD Chamber 108 (Pediatrics Wing)',
-    consultation_duration: 15,
-    available_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    available_time_start: '09:30',
-    available_time_end: '17:00',
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'd1e2f3a4-0004-4000-8000-000000000004',
-    full_name: 'Dr. Sneha Mehta',
-    slug: 'dr-sneha-mehta',
-    photo_url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400',
-    speciality_id: 'a1b2c3d4-0004-4000-8000-000000000004',
-    qualification: 'MBBS, MD, DM (Neurology), Gold Medalist',
-    experience_years: 15,
-    consultation_fee: 900,
-    bio: 'Distinguished Neurologist offering clinical treatment for stroke rehabilitation, chronic migraine, epilepsy syndromes, Parkinsonism, and peripheral nerve disorders.',
-    phone: '+91 98250 45678',
-    email: 'dr.sneha@rhythmmedicity.com',
-    availability_status: 'available',
-    status: 'active',
-    registration_number: 'G-17382',
-    languages: ['English', 'Hindi', 'Gujarati'],
-    clinic_room: 'OPD Chamber 201 (Second Floor)',
-    consultation_duration: 20,
-    available_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    available_time_start: '11:00',
-    available_time_end: '18:00',
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'd1e2f3a4-0005-4000-8000-000000000005',
-    full_name: 'Dr. Vikram Singh',
-    slug: 'dr-vikram-singh',
-    photo_url: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400',
-    speciality_id: 'a1b2c3d4-0005-4000-8000-000000000005',
-    qualification: 'MBBS, MD (Internal Medicine), FACP',
-    experience_years: 18,
-    consultation_fee: 500,
-    bio: 'Lead Consultant Physician specialized in comprehensive adult care, diabetic management, hypertension, infectious disease treatment, and geriatric wellness.',
-    phone: '+91 98250 56789',
-    email: 'dr.vikram@rhythmmedicity.com',
-    availability_status: 'available',
-    status: 'active',
-    registration_number: 'G-12490',
-    languages: ['English', 'Hindi', 'Gujarati'],
-    clinic_room: 'OPD Chamber 101 (Ground Floor)',
-    consultation_duration: 15,
-    available_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    available_time_start: '09:00',
-    available_time_end: '17:00',
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'd1e2f3a4-0006-4000-8000-000000000006',
-    full_name: 'Dr. Ananya Desai',
-    slug: 'dr-ananya-desai',
-    photo_url: 'https://images.unsplash.com/photo-1594824813583-0570b240f925?auto=format&fit=crop&q=80&w=400',
-    speciality_id: 'a1b2c3d4-0007-4000-8000-000000000007',
-    qualification: 'MBBS, MD (Dermatology, Venereology & Leprosy)',
-    experience_years: 10,
-    consultation_fee: 700,
-    bio: 'Expert Dermatologist and Cosmetologist providing modern clinical dermatology, acne therapies, allergic skin conditions, hair restoration, and aesthetic solutions.',
-    phone: '+91 98250 67890',
-    email: 'dr.ananya@rhythmmedicity.com',
-    availability_status: 'available',
-    status: 'active',
-    registration_number: 'G-23841',
-    languages: ['English', 'Hindi', 'Gujarati'],
-    clinic_room: 'OPD Chamber 204 (Second Floor)',
-    consultation_duration: 15,
-    available_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    available_time_start: '10:00',
-    available_time_end: '15:00',
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
 ];
 
-function getLocalDoctors(): Doctor[] {
+function getCachedDoctors(): Doctor[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) {
-      saveLocalDoctors(DEFAULT_DOCTORS);
-      return DEFAULT_DOCTORS;
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_DOCTORS;
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return DEFAULT_DOCTORS;
+    return [];
   }
 }
 
-function saveLocalDoctors(list: Doctor[]): void {
+function saveCachedDoctors(list: Doctor[]): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+  } catch (_) {}
+}
+
+function notifyDoctorsChanged(): void {
+  try {
+    window.dispatchEvent(new CustomEvent('rhythm_doctors_changed'));
   } catch (_) {}
 }
 
@@ -193,24 +98,12 @@ async function attachSpecialities(doctors: Doctor[]): Promise<Doctor[]> {
   }
 }
 
-function mergeWithLocal(remoteList: Doctor[]): Doctor[] {
-  const localList = getLocalDoctors();
-  const map = new Map<string, Doctor>();
-
-  for (const item of remoteList) {
-    map.set(item.id, item);
-  }
-
-  for (const item of localList) {
-    map.set(item.id, item);
-  }
-
-  return Array.from(map.values());
-}
-
 export class DoctorService {
+  /**
+   * Get all active doctors for public directory
+   * Uses live Supabase as source of truth.
+   */
   static async getActiveDoctors(specialityId?: string): Promise<Doctor[]> {
-    let remote: Doctor[] = [];
     if (isSupabaseConfigured()) {
       try {
         let query = supabase
@@ -225,18 +118,22 @@ export class DoctorService {
 
         const { data, error } = await query;
         if (!error && data) {
-          remote = data;
+          saveCachedDoctors(data);
+          return data;
         }
       } catch (err) {
         console.warn('Error fetching active doctors from Supabase:', err);
       }
     }
 
-    let merged = mergeWithLocal(remote).filter((d) => d.status?.toLowerCase() === 'active');
+    // Fallback only if offline or Supabase fails
+    const cached = getCachedDoctors();
+    let fallback = cached.length > 0 ? cached : DEFAULT_DOCTORS;
+    let filtered = fallback.filter((d) => d.status?.toLowerCase() === 'active');
     if (specialityId) {
-      merged = merged.filter((d) => d.speciality_id === specialityId);
+      filtered = filtered.filter((d) => d.speciality_id === specialityId);
     }
-    const withSpecialities = await attachSpecialities(merged);
+    const withSpecialities = await attachSpecialities(filtered);
     return withSpecialities.sort((a, b) => (b.experience_years ?? 0) - (a.experience_years ?? 0));
   }
 
@@ -255,9 +152,34 @@ export class DoctorService {
     if (!identifier) return null;
     const clean = identifier.trim().toLowerCase();
 
-    // 1. Check local storage
-    const allLocal = getLocalDoctors();
-    const local = allLocal.find(
+    // 1. Check live database first
+    if (isSupabaseConfigured()) {
+      try {
+        if (isValidUUID(identifier)) {
+          const { data, error } = await supabase
+            .from('doctors')
+            .select('*, speciality:specialities(*)')
+            .eq('id', identifier)
+            .maybeSingle();
+
+          if (!error && data) return data;
+        }
+
+        const { data, error } = await supabase
+          .from('doctors')
+          .select('*, speciality:specialities(*)')
+          .eq('slug', clean)
+          .maybeSingle();
+
+        if (!error && data) return data;
+      } catch (err) {
+        console.warn('Doctor lookup error in Supabase:', err);
+      }
+    }
+
+    // 2. Check cached doctors
+    const cached = getCachedDoctors();
+    const local = cached.find(
       (d) => d.id === identifier || (d.slug && d.slug.toLowerCase() === clean)
     );
     if (local) {
@@ -265,7 +187,7 @@ export class DoctorService {
       return withSpec[0] || local;
     }
 
-    // 2. Check defaults
+    // 3. Fallback default
     const defaultDoc = DEFAULT_DOCTORS.find(
       (d) => d.id === identifier || (d.slug && d.slug.toLowerCase() === clean)
     );
@@ -274,39 +196,13 @@ export class DoctorService {
       return withSpec[0] || defaultDoc;
     }
 
-    // 3. Check Supabase
-    if (!isSupabaseConfigured()) {
-      return null;
-    }
-
-    try {
-      // Check by UUID if valid UUID format
-      if (isValidUUID(identifier)) {
-        const { data, error } = await supabase
-          .from('doctors')
-          .select('*, speciality:specialities(*)')
-          .eq('id', identifier)
-          .maybeSingle();
-
-        if (!error && data) return data;
-      }
-
-      // Check by slug
-      const { data, error } = await supabase
-        .from('doctors')
-        .select('*, speciality:specialities(*)')
-        .eq('slug', clean)
-        .maybeSingle();
-
-      if (!error && data) return data;
-      return null;
-    } catch {
-      return null;
-    }
+    return null;
   }
 
+  /**
+   * Fetch all doctors for Admin console directly from Supabase
+   */
   static async getAllDoctorsAdmin(): Promise<Doctor[]> {
-    let remote: Doctor[] = [];
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -315,15 +211,20 @@ export class DoctorService {
           .order('created_at', { ascending: false });
 
         if (!error && data) {
-          remote = data;
+          saveCachedDoctors(data);
+          return data;
+        }
+        if (error) {
+          console.warn('Error fetching admin doctors from Supabase:', error);
         }
       } catch (err) {
         console.warn('Error fetching admin doctors from Supabase:', err);
       }
     }
 
-    const merged = mergeWithLocal(remote);
-    const withSpecialities = await attachSpecialities(merged);
+    const cached = getCachedDoctors();
+    const fallback = cached.length > 0 ? cached : DEFAULT_DOCTORS;
+    const withSpecialities = await attachSpecialities(fallback);
     return withSpecialities.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
   }
 
@@ -380,38 +281,48 @@ export class DoctorService {
           .select('*, speciality:specialities(*)')
           .single();
 
-        if (!error && data) {
-          const locals = getLocalDoctors();
-          saveLocalDoctors([data, ...locals.filter((d) => d.id !== data.id)]);
+        if (error) {
+          throw new Error(error.message || 'Database insert failed');
+        }
+
+        if (data) {
+          const cached = getCachedDoctors();
+          saveCachedDoctors([data, ...cached.filter((d) => d.id !== data.id)]);
           await AuditService.logAction('CREATE_DOCTOR', 'doctor', data.id, { name: data.full_name, speciality: data.speciality_id });
+          notifyDoctorsChanged();
           return data;
         }
-        console.warn('Supabase doctor create failed, saving locally:', error);
-      } catch (err) {
-        console.warn('Supabase doctor create threw, saving locally:', err);
+      } catch (err: any) {
+        console.error('Supabase doctor create failed:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalDoctors();
-    saveLocalDoctors([newRecord, ...locals.filter((d) => d.id !== newRecord.id)]);
+    const cached = getCachedDoctors();
+    saveCachedDoctors([newRecord, ...cached.filter((d) => d.id !== newRecord.id)]);
     const withSpec = await attachSpecialities([newRecord]);
     await AuditService.logAction('CREATE_DOCTOR', 'doctor', newRecord.id, { name: newRecord.full_name, speciality: newRecord.speciality_id });
+    notifyDoctorsChanged();
     return withSpec[0] || newRecord;
   }
 
   static async updateDoctor(id: string, doctorData: Partial<Doctor>): Promise<Doctor> {
-    let updatedRecord: Doctor | null = null;
-
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
         const updatePayload: any = {
           ...doctorData,
-          consultation_fee: doctorData.consultation_fee !== undefined ? Number(doctorData.consultation_fee) : undefined,
-          experience_years: doctorData.experience_years !== undefined ? Number(doctorData.experience_years) : undefined,
-          consultation_duration: doctorData.consultation_duration !== undefined ? Number(doctorData.consultation_duration) : undefined,
           updated_at: new Date().toISOString(),
         };
 
+        if (doctorData.consultation_fee !== undefined) {
+          updatePayload.consultation_fee = Number(doctorData.consultation_fee);
+        }
+        if (doctorData.experience_years !== undefined) {
+          updatePayload.experience_years = Number(doctorData.experience_years);
+        }
+        if (doctorData.consultation_duration !== undefined) {
+          updatePayload.consultation_duration = Number(doctorData.consultation_duration);
+        }
         if ('speciality_id' in doctorData) {
           updatePayload.speciality_id = sanitizeUUID(doctorData.speciality_id);
         }
@@ -423,18 +334,25 @@ export class DoctorService {
           .select('*, speciality:specialities(*)')
           .single();
 
-        if (!error && data) {
-          updatedRecord = data;
-        } else {
-          console.warn('Supabase doctor update error, saving locally:', error);
+        if (error) {
+          throw new Error(error.message || 'Database update failed');
         }
-      } catch (err) {
-        console.warn('Supabase doctor update threw, saving locally:', err);
+
+        if (data) {
+          const cached = getCachedDoctors();
+          saveCachedDoctors([data, ...cached.filter((d) => d.id !== id)]);
+          await AuditService.logAction('UPDATE_DOCTOR', 'doctor', id, { name: data.full_name, changes: Object.keys(doctorData) });
+          notifyDoctorsChanged();
+          return data;
+        }
+      } catch (err: any) {
+        console.error('Supabase doctor update error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalDoctors();
-    const existing = locals.find((d) => d.id === id);
+    const cached = getCachedDoctors();
+    const existing = cached.find((d) => d.id === id);
     const merged: Doctor = {
       id,
       full_name: doctorData.full_name ?? existing?.full_name ?? '',
@@ -458,30 +376,44 @@ export class DoctorService {
       status: doctorData.status ?? existing?.status ?? 'active',
       created_at: existing?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      ...(updatedRecord || {}),
     };
 
-    saveLocalDoctors([merged, ...locals.filter((d) => d.id !== id)]);
-    const withSpec = await attachSpecialities([updatedRecord || merged]);
+    saveCachedDoctors([merged, ...cached.filter((d) => d.id !== id)]);
+    const withSpec = await attachSpecialities([merged]);
     await AuditService.logAction('UPDATE_DOCTOR', 'doctor', id, { name: merged.full_name, changes: Object.keys(doctorData) });
-    return withSpec[0] || (updatedRecord || merged);
+    notifyDoctorsChanged();
+    return withSpec[0] || merged;
   }
 
   static async deleteDoctor(id: string): Promise<void> {
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
-        await supabase.from('doctors').delete().eq('id', id);
-      } catch (err) {
-        console.warn('Supabase delete doctor error:', err);
+        // If there are appointments referencing this doctor, remove or reassign them cleanly to satisfy foreign key constraints
+        const { error: apptError } = await supabase
+          .from('appointments')
+          .delete()
+          .eq('doctor_id', id);
+
+        if (apptError) {
+          console.warn('Could not cascade-delete appointments:', apptError);
+        }
+
+        const { error } = await supabase.from('doctors').delete().eq('id', id);
+        if (error) {
+          throw new Error(error.message || 'Database deletion failed');
+        }
+      } catch (err: any) {
+        console.error('Supabase delete doctor error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalDoctors();
-    const docToDelete = locals.find((d) => d.id === id);
-    saveLocalDoctors(locals.filter((d) => d.id !== id));
+    const cached = getCachedDoctors();
+    const docToDelete = cached.find((d) => d.id === id);
+    saveCachedDoctors(cached.filter((d) => d.id !== id));
     await AuditService.logAction('DELETE_DOCTOR', 'doctor', id, { name: docToDelete?.full_name });
+    notifyDoctorsChanged();
   }
-
 
   static async uploadPhoto(file: File): Promise<string> {
     const fileExt = file.name.split('.').pop() || 'jpg';

@@ -30,94 +30,31 @@ export const DEFAULT_SERVICES: HospitalService[] = [
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
   },
-  {
-    id: 's1b2c3d4-0003-4000-8000-000000000003',
-    name: 'Advanced Pathology & Diagnostics',
-    slug: 'pathology-diagnostics',
-    description: 'Fully automated biochemistry, hematology, microbiology, hormone assays, and rapid laboratory reporting.',
-    icon: 'FlaskConical',
-    image_url: null,
-    status: 'active',
-    display_order: 3,
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 's1b2c3d4-0004-4000-8000-000000000004',
-    name: 'Digital Radiology & CT Imaging',
-    slug: 'radiology-imaging',
-    description: 'High-resolution Multi-slice CT scan, digital X-Ray, high-definition ultrasonography, and color Doppler.',
-    icon: 'Scan',
-    image_url: null,
-    status: 'active',
-    display_order: 4,
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 's1b2c3d4-0005-4000-8000-000000000005',
-    name: 'In-House 24x7 Pharmacy',
-    slug: 'pharmacy',
-    description: 'Genuine prescription medications, life-saving critical drugs, surgical disposables, and cold-chain storage.',
-    icon: 'Pill',
-    image_url: null,
-    status: 'active',
-    display_order: 5,
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 's1b2c3d4-0006-4000-8000-000000000006',
-    name: 'Hemodialysis Unit',
-    slug: 'dialysis-unit',
-    description: 'State-of-the-art dialysis stations with advanced RO water purification for acute and maintenance renal care.',
-    icon: 'Droplets',
-    image_url: null,
-    status: 'active',
-    display_order: 6,
-    created_at: '2026-01-01T00:00:00.000Z',
-    updated_at: '2026-01-01T00:00:00.000Z',
-  },
 ];
 
-function getLocalServices(): HospitalService[] {
+function getCachedServices(): HospitalService[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) {
-      saveLocalServices(DEFAULT_SERVICES);
-      return DEFAULT_SERVICES;
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_SERVICES;
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return DEFAULT_SERVICES;
+    return [];
   }
 }
 
-function saveLocalServices(list: HospitalService[]): void {
+function saveCachedServices(list: HospitalService[]): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
   } catch (_) {}
 }
 
-function mergeWithLocal(remoteList: HospitalService[]): HospitalService[] {
-  const localList = getLocalServices();
-  const map = new Map<string, HospitalService>();
-
-  for (const item of remoteList) {
-    map.set(item.id, item);
-  }
-
-  for (const item of localList) {
-    map.set(item.id, item);
-  }
-
-  return Array.from(map.values());
+function notifyServicesChanged(): void {
+  try {
+    window.dispatchEvent(new CustomEvent('rhythm_services_changed'));
+  } catch (_) {}
 }
 
 export class ServiceService {
   static async getActiveServices(): Promise<HospitalService[]> {
-    let remote: HospitalService[] = [];
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -128,19 +65,22 @@ export class ServiceService {
           .order('name', { ascending: true });
 
         if (!error && data) {
-          remote = data;
+          saveCachedServices(data);
+          return data;
         }
       } catch (err) {
         console.warn('Error fetching active services from Supabase:', err);
       }
     }
 
-    const merged = mergeWithLocal(remote).filter((s) => s.status === 'active');
-    return merged.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const cached = getCachedServices();
+    const fallback = cached.length > 0 ? cached : DEFAULT_SERVICES;
+    return fallback
+      .filter((s) => s.status === 'active')
+      .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
   }
 
   static async getAllServicesAdmin(): Promise<HospitalService[]> {
-    let remote: HospitalService[] = [];
     if (isSupabaseConfigured()) {
       try {
         const { data, error } = await supabase
@@ -150,15 +90,20 @@ export class ServiceService {
           .order('created_at', { ascending: false });
 
         if (!error && data) {
-          remote = data;
+          saveCachedServices(data);
+          return data;
+        }
+        if (error) {
+          console.warn('Error fetching admin services from Supabase:', error);
         }
       } catch (err) {
         console.warn('Error fetching admin services from Supabase:', err);
       }
     }
 
-    const merged = mergeWithLocal(remote);
-    return merged.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const cached = getCachedServices();
+    const fallback = cached.length > 0 ? cached : DEFAULT_SERVICES;
+    return fallback.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
   }
 
   static async createService(serviceData: Partial<HospitalService>): Promise<HospitalService> {
@@ -181,32 +126,38 @@ export class ServiceService {
 
     if (isSupabaseConfigured()) {
       try {
-        const payload = { ...newRecord };
         const { data, error } = await supabase
           .from('services')
-          .insert(payload)
+          .insert(newRecord)
           .select()
           .single();
 
-        if (!error && data) {
-          const locals = getLocalServices();
-          saveLocalServices([data, ...locals.filter((s) => s.id !== data.id)]);
+        if (error) {
+          throw new Error(error.message || 'Database insert failed');
+        }
+
+        if (data) {
+          const cached = getCachedServices();
+          saveCachedServices([data, ...cached.filter((s) => s.id !== data.id)]);
+          notifyServicesChanged();
           return data;
         }
-        console.warn('Supabase service create error, saving locally:', error);
-      } catch (err) {
-        console.warn('Supabase service create threw, saving locally:', err);
+      } catch (err: any) {
+        console.error('Supabase service create error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalServices();
-    saveLocalServices([newRecord, ...locals.filter((s) => s.id !== newRecord.id)]);
+    const cached = getCachedServices();
+    saveCachedServices([newRecord, ...cached.filter((s) => s.id !== newRecord.id)]);
+    notifyServicesChanged();
     return newRecord;
   }
 
-  static async updateService(id: string, serviceData: Partial<HospitalService>): Promise<HospitalService> {
-    let updatedRecord: HospitalService | null = null;
-
+  static async updateService(
+    id: string,
+    serviceData: Partial<HospitalService>
+  ): Promise<HospitalService> {
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
         const { data, error } = await supabase
@@ -214,54 +165,76 @@ export class ServiceService {
           .update({
             ...serviceData,
             display_order:
-              serviceData.display_order !== undefined ? Number(serviceData.display_order) : undefined,
+              serviceData.display_order !== undefined
+                ? Number(serviceData.display_order)
+                : undefined,
             updated_at: new Date().toISOString(),
           })
           .eq('id', id)
           .select()
           .single();
 
-        if (!error && data) {
-          updatedRecord = data;
-        } else {
-          console.warn('Supabase service update error, saving locally:', error);
+        if (error) {
+          throw new Error(error.message || 'Database update failed');
         }
-      } catch (err) {
-        console.warn('Supabase service update threw, saving locally:', err);
+
+        if (data) {
+          const cached = getCachedServices();
+          saveCachedServices([data, ...cached.filter((s) => s.id !== id)]);
+          notifyServicesChanged();
+          return data;
+        }
+      } catch (err: any) {
+        console.error('Supabase service update error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalServices();
-    const existing = locals.find((s) => s.id === id);
+    const cached = getCachedServices();
+    const existing = cached.find((s) => s.id === id);
     const merged: HospitalService = {
       id,
       name: serviceData.name ?? existing?.name ?? '',
       slug: serviceData.slug ?? existing?.slug ?? '',
-      description: serviceData.description !== undefined ? serviceData.description : (existing?.description || null),
-      icon: serviceData.icon !== undefined ? serviceData.icon : (existing?.icon || null),
-      image_url: serviceData.image_url !== undefined ? serviceData.image_url : (existing?.image_url || null),
+      description:
+        serviceData.description !== undefined
+          ? serviceData.description
+          : existing?.description || null,
+      icon: serviceData.icon !== undefined ? serviceData.icon : existing?.icon || null,
+      image_url:
+        serviceData.image_url !== undefined
+          ? serviceData.image_url
+          : existing?.image_url || null,
       status: serviceData.status ?? existing?.status ?? 'active',
-      display_order: serviceData.display_order !== undefined ? Number(serviceData.display_order) : (existing?.display_order || 0),
+      display_order:
+        serviceData.display_order !== undefined
+          ? Number(serviceData.display_order)
+          : existing?.display_order || 0,
       created_at: existing?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      ...(updatedRecord || {}),
     };
 
-    saveLocalServices([merged, ...locals.filter((s) => s.id !== id)]);
-    return updatedRecord || merged;
+    saveCachedServices([merged, ...cached.filter((s) => s.id !== id)]);
+    notifyServicesChanged();
+    return merged;
   }
 
   static async deleteService(id: string): Promise<void> {
     if (isSupabaseConfigured() && isValidUUID(id)) {
       try {
-        await supabase.from('services').delete().eq('id', id);
-      } catch (err) {
-        console.warn('Supabase service delete error:', err);
+        const { error } = await supabase.from('services').delete().eq('id', id);
+        if (error) {
+          throw new Error(error.message || 'Database delete failed');
+        }
+      } catch (err: any) {
+        console.error('Supabase service delete error:', err);
+        throw err;
       }
     }
 
-    const locals = getLocalServices();
-    saveLocalServices(locals.filter((s) => s.id !== id));
+    const cached = getCachedServices();
+    saveCachedServices(cached.filter((s) => s.id !== id));
+    notifyServicesChanged();
   }
 
   static async uploadImage(file: File): Promise<string> {

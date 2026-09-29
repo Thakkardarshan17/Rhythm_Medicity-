@@ -6,24 +6,28 @@ import { Speciality } from '../types/database';
 import { CardSkeleton } from '../components/LoadingSkeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
 
 export const Specialities: React.FC = () => {
   const [specialities, setSpecialities] = useState<Speciality[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchSpecialities = async () => {
+    try {
+      const data = await SpecialityService.getActiveSpecialities();
+      setSpecialities(data);
+    } catch (err) {
+      console.error('Error fetching specialities:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSpecialities = async () => {
-      try {
-        const data = await SpecialityService.getActiveSpecialities();
-        setSpecialities(data);
-      } catch (err) {
-        console.error('Error fetching specialities:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchSpecialities();
   }, []);
+
+  useRealtimeSync({ table: 'specialities', onUpdate: fetchSpecialities });
 
   return (
     <div className="space-y-10 pb-20">

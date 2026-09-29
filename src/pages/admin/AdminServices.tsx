@@ -16,6 +16,7 @@ export const AdminServices: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<HospitalService | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<HospitalService | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState<Partial<HospitalService>>({
@@ -39,6 +40,15 @@ export const AdminServices: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+
+    window.addEventListener('rhythm_services_changed', handleSync);
+    return () => {
+      window.removeEventListener('rhythm_services_changed', handleSync);
+    };
   }, []);
 
   const openAddModal = () => {
@@ -98,16 +108,19 @@ export const AdminServices: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
       await ServiceService.deleteService(deleteTarget.id);
       await AuditService.logAction('DELETE', 'SERVICE', deleteTarget.id, {
         name: deleteTarget.name,
       });
-      showToast('Service removed.', 'info');
+      showToast('Service removed permanently from database.', 'info');
       setDeleteTarget(null);
       await loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete service', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -314,6 +327,7 @@ export const AdminServices: React.FC = () => {
         message={`Are you sure you want to delete ${deleteTarget?.name}?`}
         confirmText="Delete Service"
         isDestructive={true}
+        isLoading={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

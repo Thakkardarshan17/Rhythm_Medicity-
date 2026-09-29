@@ -41,6 +41,7 @@ export const AdminDoctors: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Doctor | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -82,6 +83,18 @@ export const AdminDoctors: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+
+    window.addEventListener('rhythm_doctors_changed', handleSync);
+    window.addEventListener('rhythm_specialities_changed', handleSync);
+
+    return () => {
+      window.removeEventListener('rhythm_doctors_changed', handleSync);
+      window.removeEventListener('rhythm_specialities_changed', handleSync);
+    };
   }, []);
 
   const openAddModal = () => {
@@ -190,16 +203,19 @@ export const AdminDoctors: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
       await DoctorService.deleteDoctor(deleteTarget.id);
       await AuditService.logAction('DELETE', 'DOCTOR', deleteTarget.id, {
         name: deleteTarget.full_name,
       });
-      showToast('Doctor record deleted.', 'info');
+      showToast('Doctor record deleted permanently from database.', 'info');
       setDeleteTarget(null);
       await loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete doctor', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -744,6 +760,7 @@ export const AdminDoctors: React.FC = () => {
         message={`Are you sure you want to permanently remove ${deleteTarget?.full_name}? Existing appointment history will retain snapshot doctor details.`}
         confirmText="Delete Doctor"
         isDestructive={true}
+        isLoading={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

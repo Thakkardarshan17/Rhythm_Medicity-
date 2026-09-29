@@ -6,24 +6,28 @@ import { HospitalService } from '../types/database';
 import { CardSkeleton } from '../components/LoadingSkeleton';
 import { EmptyState } from '../components/EmptyState';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
 
 export const Services: React.FC = () => {
   const [services, setServices] = useState<HospitalService[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchServices = async () => {
+    try {
+      const data = await ServiceService.getActiveServices();
+      setServices(data);
+    } catch (err) {
+      console.error('Error fetching hospital services:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const data = await ServiceService.getActiveServices();
-        setServices(data);
-      } catch (err) {
-        console.error('Error fetching hospital services:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchServices();
   }, []);
+
+  useRealtimeSync({ table: 'services', onUpdate: fetchServices });
 
   return (
     <div className="space-y-10 pb-20">

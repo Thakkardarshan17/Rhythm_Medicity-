@@ -38,6 +38,7 @@ export const AdminBanners: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -68,6 +69,15 @@ export const AdminBanners: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+
+    window.addEventListener('rhythm_banners_changed', handleSync);
+    return () => {
+      window.removeEventListener('rhythm_banners_changed', handleSync);
+    };
   }, []);
 
   const handleSaveCarouselSettings = async (e: React.FormEvent) => {
@@ -162,14 +172,17 @@ export const AdminBanners: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
       await BannerService.deleteBanner(deleteTarget.id);
       await AuditService.logAction('DELETE', 'BANNER', deleteTarget.id, { title: deleteTarget.title });
-      showToast('Hero banner deleted.', 'info');
+      showToast('Hero banner deleted permanently from database.', 'info');
       setDeleteTarget(null);
       await loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete banner', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -529,6 +542,7 @@ export const AdminBanners: React.FC = () => {
         message={`Are you sure you want to remove "${deleteTarget?.title}" from the homepage carousel?`}
         confirmText="Delete Banner"
         isDestructive={true}
+        isLoading={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
