@@ -881,10 +881,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const redirectUri = `${window.location.origin}/login?redirect=${encodeURIComponent(redirectPath)}`;
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUri,
+          skipBrowserRedirect: true,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -893,7 +894,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        if (error.message?.includes('provider is not enabled') || error.message?.includes('Unsupported provider')) {
+          return {
+            success: false,
+            error: 'Google Sign-In is not enabled yet in the Supabase Dashboard (Authentication > Providers > Google). Please create an account or login using your Email & Password below.',
+          };
+        }
         return { success: false, error: error.message };
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+        return { success: true };
       }
 
       return { success: true };

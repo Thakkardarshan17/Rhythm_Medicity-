@@ -67,6 +67,7 @@ export const Login: React.FC = () => {
   // Status & Feedback States
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [googleError, setGoogleError] = useState('');
   const [registeredSuccess, setRegisteredSuccess] = useState(false);
   const [resetSubmitted, setResetSubmitted] = useState(false);
   const [resetCompleted, setResetCompleted] = useState(false);
@@ -167,13 +168,18 @@ export const Login: React.FC = () => {
   // 3. Continue with Google
   const handleGoogleSignIn = async () => {
     setGoogleSubmitting(true);
+    setGoogleError('');
     try {
       const res = await signInWithGoogle(redirectPath);
       if (!res.success) {
-        showToast(res.error || 'Unable to connect to Google authentication provider.', 'error');
+        const errorMsg = res.error || 'Unable to connect to Google authentication provider.';
+        setGoogleError(errorMsg);
+        showToast(errorMsg, 'error');
       }
     } catch (err: any) {
-      showToast(err.message || 'Google authentication error', 'error');
+      const errorMsg = err.message || 'Google authentication error';
+      setGoogleError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setGoogleSubmitting(false);
     }
@@ -419,6 +425,28 @@ export const Login: React.FC = () => {
               <span>Continue with Google</span>
             </button>
 
+            {/* Google Authentication Alert / Supabase Provider Notice */}
+            {googleError && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-amber-800">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Google Sign-In Setup Notice</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-800 font-medium">
+                  {googleError}
+                </p>
+                <div className="pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => { setGoogleError(''); setMode('register'); }}
+                    className="font-black text-[#006655] underline text-xs cursor-pointer hover:text-[#004C3D]"
+                  >
+                    👉 Click here to Create Patient Account with Email & Password
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Link to Registration */}
             <div className="pt-2 text-center text-xs text-slate-600">
               New to Rhythm Medicity?{' '}
@@ -657,6 +685,28 @@ export const Login: React.FC = () => {
               )}
               <span>Continue with Google</span>
             </button>
+
+            {/* Google Authentication Alert / Supabase Provider Notice */}
+            {googleError && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-amber-800">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Google Sign-In Setup Notice</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-800 font-medium">
+                  {googleError}
+                </p>
+                <div className="pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setGoogleError('')}
+                    className="font-black text-[#006655] underline text-xs cursor-pointer hover:text-[#004C3D]"
+                  >
+                    👉 Use the registration form above with Email & Mobile Number
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Link: Already have an account? Login */}
             <div className="pt-2 text-center text-xs text-slate-600">
